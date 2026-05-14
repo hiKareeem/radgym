@@ -1,0 +1,33 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0001",
+    "presentation": "Incidental solid pulmonary nodule, 5 mm, right upper lobe, on a chest CT performed for unrelated abdominal trauma evaluation.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5,
+      "multiplicity": "single",
+      "morphology": "smooth",
+      "location": "upper_lobe",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 58,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Routine CT abdomen/pelvis after MVA; lung bases included the nodule incidentally. Patient asymptomatic, no known pulmonary disease."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0001",
+    "recommendation": "no_routine_followup",
+    "dominant_nodule_recommendation": null,
+    "source": "synthetic_maintainer_authored",
+    "notes": "Canonical low-risk small solid nodule. Anchor case for the NO_ROUTINE_FOLLOWUP bin."
+  }
+}
