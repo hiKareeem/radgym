@@ -1,0 +1,40 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Envs
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Secrets — radgym must never commit API keys
+*.key
+*api_key*
+*secret*
+radgym_secrets.json
+
+# Hidden test set — must never enter the public repo
+cases/v0.1/test/
+cases/v*/test/
+
+# HF Space deploy artifacts
+.hf_space/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
