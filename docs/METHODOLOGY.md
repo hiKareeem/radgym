@@ -12,7 +12,12 @@
 
 MacMahon H, et al. "Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images: From the Fleischner Society 2017." *Radiology* 2017;284(1):228-243. doi:10.1148/radiol.2017161659
 
-Scope: incidental pulmonary nodules detected on CT in patients ≥35 years old, **excluding** lung cancer screening (Lung-RADS, future track), patients with known primary cancer, and immunocompromised patients.
+Scope: incidental pulmonary nodules detected on CT in patients ≥35 years old, **excluding**:
+
+- Lung cancer screening (Lung-RADS, future track)
+- Patients with known primary cancer
+- Immunocompromised patients
+- **Nodules with classic benign features** — fat density of hamartoma, popcorn calcification, diffuse/central/laminated benign-pattern calcification, perifissural triangular morphology classic for intrapulmonary lymph node. Fleischner 2017 explicitly says these "do not require routine follow-up per these guidelines" because the diagnostic question is answered by morphology, not the algorithm. Cases with these features are out-of-scope for v0.1 because they bypass the algorithm entirely. A future track (v0.2+) may add a `benign_features_no_followup` bin that captures the *recognition* of benign features as a distinct reasoning task — until then, the v0.1 test set contains only cases where Fleischner 2017's size+density+risk algorithm is the active decision path.
 
 ### 1.2 Input schema (per case)
 
