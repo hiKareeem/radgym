@@ -258,11 +258,21 @@ class GroundTruth(BaseModel):
     case_id: str = Field(pattern=r"^RGYM-v01-\d{4}$")
     recommendation: Recommendation
     dominant_nodule_recommendation: Recommendation | None = None
+    # Maintainer-assigned Fleischner risk category — the clinical judgment
+    # that maps patient factors to the low/high binary the paper's Table 1
+    # is keyed by. Per Fleischner 2017 §"Risk Factors for Malignancy":
+    # "Consider all relevant risk factors" — there is no mechanical formula;
+    # it is the radiologist's synthesis. v0.1 captures this honestly by
+    # asking the maintainer to commit to low/high during curation; the
+    # oracle's derive_risk() is a sanity-check baseline, not the source of
+    # truth. Agents must still derive this from individual factors as
+    # part of the reasoning task.
+    maintainer_assigned_risk: Literal["low", "high"]
     source: str = Field(
         description=(
-            "Origin of the case: 'fleischner_2017_example', 'radiopaedia:<url>', "
-            "'openi:<id>', 'radiology_assistant:<url>', or "
-            "'synthetic_maintainer_authored'."
+            "Origin of the case: 'fleischner_2017_example', "
+            "'fleischner_2017_table1_row:<row_id>', 'openi:<id>', "
+            "'radiology_assistant:<url>', or 'synthetic_maintainer_authored'."
         )
     )
     notes: str = Field(

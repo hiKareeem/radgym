@@ -31,14 +31,17 @@ def test_dev_cases_load() -> None:
 def test_oracle_matches_ground_truth_on_dev_cases() -> None:
     """Oracle must agree with maintainer-curated ground truth for every dev case.
 
-    This is the curation safety check: if the oracle disagrees with a
-    maintainer-written label, that case is either mis-labeled or the
-    oracle is wrong. Either way it must not enter the test set.
+    The oracle is run with the maintainer's risk override (so we're testing
+    the Table-1 application logic, not the conservative derive_risk
+    heuristic, which the maintainer's clinical judgment may legitimately
+    differ from).
     """
     records = _load_records()
     disagreements = []
     for rec in records:
-        result = apply_fleischner_2017(rec.case)
+        result = apply_fleischner_2017(
+            rec.case, risk_override=rec.ground_truth.maintainer_assigned_risk
+        )
         if result.recommendation != rec.ground_truth.recommendation:
             disagreements.append(
                 (rec.case.case_id, result.recommendation, rec.ground_truth.recommendation)
@@ -151,6 +154,7 @@ def test_scoring_under_following_penalized_more_than_over() -> None:
         case_id="RGYM-v01-0001",
         recommendation=Recommendation.CT_3_6MO_THEN_18_24MO,
         source="synthetic_maintainer_authored",
+        maintainer_assigned_risk="low",
     )
     safe_response = AgentResponse(
         case_id="RGYM-v01-0001",
@@ -183,6 +187,7 @@ def test_cross_track_recommendation_scores_wrong_unsafe() -> None:
         case_id="RGYM-v01-0001",
         recommendation=Recommendation.CT_3_6MO_THEN_18_24MO,  # solid track
         source="synthetic_maintainer_authored",
+        maintainer_assigned_risk="low",
     )
     wrong_track_response = AgentResponse(
         case_id="RGYM-v01-0001",
@@ -202,6 +207,7 @@ def test_cross_track_reverse_direction() -> None:
         case_id="RGYM-v01-0001",
         recommendation=Recommendation.SUBSOLID_WORKUP,  # subsolid track
         source="synthetic_maintainer_authored",
+        maintainer_assigned_risk="low",
     )
     wrong_track_response = AgentResponse(
         case_id="RGYM-v01-0001",
@@ -224,6 +230,7 @@ def test_shared_bins_not_cross_track() -> None:
         case_id="RGYM-v01-0001",
         recommendation=Recommendation.SUBSOLID_WORKUP,
         source="synthetic_maintainer_authored",
+        maintainer_assigned_risk="low",
     )
     shared_floor_response = AgentResponse(
         case_id="RGYM-v01-0001",

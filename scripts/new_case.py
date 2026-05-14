@@ -329,16 +329,38 @@ def build_case(case_id: str) -> Case:
 
 
 def review_oracle_and_get_ground_truth(case: Case) -> GroundTruth:
+    banner("Maintainer risk classification")
+    print(dim(
+        "  Per Fleischner 2017: 'Consider all relevant risk factors.'"
+        "\n  No mechanical formula — your clinical synthesis is the source of truth."
+        "\n  Inputs: smoking, age, asbestos, family hx, emphysema, fibrosis,"
+        "\n          nodule morphology (spiculated → higher), upper-lobe location."
+    ))
+    print()
+    maintainer_risk = ask_choice(
+        "your assigned risk category",
+        choices=("low", "high"),
+        default="low",
+    )
+
     banner("Oracle review")
 
     result = apply_fleischner_2017(case)
 
-    print(f"  Derived risk:        {bold(result.risk_category)}")
-    print(f"  Oracle recommendation: {bold(green(result.recommendation.value))}")
+    print(f"  Oracle's heuristic risk:   {bold(result.risk_category)}")
+    print(f"  Your assigned risk:        {bold(green(maintainer_risk))}")
+    if result.risk_category != maintainer_risk:
+        print(yellow(
+            f"  ⚠ Oracle disagrees with you on risk. Oracle uses a conservative\n"
+            f"    smoking-OR-comorbidity rule and ignores age/location/morphology.\n"
+            f"    Your judgment wins — but flag in notes if this is a deliberate call."
+        ))
+    print()
+    print(f"  Oracle recommendation:     {bold(green(result.recommendation.value))}")
     if result.dominant_nodule_recommendation:
-        print(f"  Dominant sub-bin:    {bold(result.dominant_nodule_recommendation.value)}")
+        print(f"  Oracle dominant sub-bin:   {bold(result.dominant_nodule_recommendation.value)}")
     if result.subsolid_intent != "not_applicable":
-        print(f"  Sub-solid intent:    {dim(result.subsolid_intent)}")
+        print(f"  Sub-solid intent:          {dim(result.subsolid_intent)}")
     print()
     print(f"  Reasoning trace:")
     for line in result.reasoning.split(". "):
@@ -348,7 +370,7 @@ def review_oracle_and_get_ground_truth(case: Case) -> GroundTruth:
     print()
     accept = ask_bool(
         "Accept the oracle's recommendation as ground truth?",
-        default=True,
+        default=(result.risk_category == maintainer_risk),
     )
     if accept:
         gt_rec = result.recommendation
@@ -356,11 +378,11 @@ def review_oracle_and_get_ground_truth(case: Case) -> GroundTruth:
         notes_default = ""
     else:
         print(yellow(
-            "\n  ⚠ You're overriding the oracle. This means EITHER:"
-            "\n    (a) the oracle has a bug for this case shape (file an issue), OR"
-            "\n    (b) the case has clinical nuance the rules engine can't capture."
-            "\n  In case (b), strongly consider excluding from v0.1 — the test set"
-            "\n  should be cases where Fleischner 2017 applies cleanly."
+            "\n  ⚠ You're overriding the oracle. Three possible reasons:"
+            "\n    (a) you assigned different risk than the oracle (legitimate — your judgment),"
+            "\n    (b) oracle has a bug for this case shape (file an issue), OR"
+            "\n    (c) the case has clinical nuance the rules engine can't capture."
+            "\n  In case (c), strongly consider excluding from v0.1 instead."
         ))
         bin_choices = tuple(r.value for r in Recommendation)
         gt_rec = Recommendation(ask_choice("  override recommendation", choices=bin_choices))
@@ -369,12 +391,12 @@ def review_oracle_and_get_ground_truth(case: Case) -> GroundTruth:
             gt_dominant = Recommendation(ask_choice("  override dominant sub-bin", choices=sub_choices))
         else:
             gt_dominant = None
-        notes_default = "MAINTAINER OVERRIDE: "
+        notes_default = f"MAINTAINER OVERRIDE (risk={maintainer_risk}, oracle_risk={result.risk_category}): "
 
     banner("Source attribution")
     print(dim("  Examples:"))
     print(dim("    fleischner_2017_example"))
-    print(dim("    radiopaedia:https://radiopaedia.org/cases/12345"))
+    print(dim("    fleischner_2017_table1_row:single_solid_lt6mm_low"))
     print(dim("    openi:CXR123_IM-0456"))
     print(dim("    radiology_assistant:https://radiologyassistant.nl/chest/..."))
     print(dim("    synthetic_maintainer_authored"))
@@ -390,6 +412,7 @@ def review_oracle_and_get_ground_truth(case: Case) -> GroundTruth:
             case_id=case.case_id,
             recommendation=gt_rec,
             dominant_nodule_recommendation=gt_dominant,
+            maintainer_assigned_risk=maintainer_risk,  # type: ignore[arg-type]
             source=source,
             notes=notes,
         ),

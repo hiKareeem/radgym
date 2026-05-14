@@ -280,12 +280,25 @@ def _dominant_nodule(nodule: Nodule) -> Nodule:
 # ---------------------------------------------------------------------------
 
 
-def apply_fleischner_2017(case: Case) -> OracleResult:
+def apply_fleischner_2017(
+    case: Case, *, risk_override: RiskCategory | None = None
+) -> OracleResult:
     """Apply the Fleischner 2017 algorithm to a case.
 
     Returns an OracleResult containing the v0.1 bin, the dominant-nodule
     bin (for multiple-nodule cases), the derived risk category, the
     sub-solid intent (for v0.2 migration), and a plain-English trace.
+
+    Parameters
+    ----------
+    case
+        The case to evaluate.
+    risk_override
+        If provided, use this risk category instead of the heuristic
+        :func:`derive_risk`. Used by the Table 1 launch-gate test and by
+        the case authoring tool when the maintainer's clinical judgment
+        differs from the heuristic — see schemas.GroundTruth's
+        ``maintainer_assigned_risk`` field for the rationale.
 
     Raises
     ------
@@ -295,7 +308,7 @@ def apply_fleischner_2017(case: Case) -> OracleResult:
         scope flags at construction time).
     """
     nodule = case.nodule
-    risk = derive_risk(case.patient)
+    risk: RiskCategory = risk_override if risk_override is not None else derive_risk(case.patient)
 
     if nodule.multiplicity == "single":
         if nodule.type == "solid":

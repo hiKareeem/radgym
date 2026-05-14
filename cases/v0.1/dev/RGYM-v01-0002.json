@@ -27,6 +27,7 @@
     "case_id": "RGYM-v01-0002",
     "recommendation": "ct_3_6mo_then_18_24mo",
     "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
     "source": "synthetic_maintainer_authored",
     "notes": "Canonical 6-8 mm high-risk anchor case; spiculated morphology not used by oracle but realistic for high-risk presentation."
   }

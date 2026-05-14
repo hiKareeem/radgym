@@ -27,6 +27,7 @@
     "case_id": "RGYM-v01-0001",
     "recommendation": "no_routine_followup",
     "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "low",
     "source": "synthetic_maintainer_authored",
     "notes": "Canonical low-risk small solid nodule. Anchor case for the NO_ROUTINE_FOLLOWUP bin."
   }
