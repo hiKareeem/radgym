@@ -51,16 +51,55 @@ class Recommendation(str, Enum):
     MULTIPLE_NODULE_DOMINANT = "multiple_nodule_dominant"
 
 
-# Adjacency order for scoring — see scoring/score.py.
-RECOMMENDATION_ORDER: tuple[Recommendation, ...] = (
+# ---------------------------------------------------------------------------
+# Adjacency tracks for scoring
+#
+# Critical fix from external review: SUBSOLID_WORKUP is NOT on the same
+# 1-D severity axis as the solid-track bins. Sub-solid follow-up exists
+# on a parallel track. A single linear ordering would make
+# "recommend SUBSOLID_WORKUP on a solid 8mm case" look like a 1-bin miss
+# (adjacent_safe, +0.50) when it's actually a track-type error and
+# should score wrong_unsafe (-0.50).
+#
+# Two intra-track axes are defined here. Cross-track recommendations
+# are scored as wrong_unsafe by scoring._classify_against_truth().
+# NO_ROUTINE_FOLLOWUP and CONSIDER_PET_OR_BIOPSY appear on both
+# tracks — they are the shared floor and ceiling.
+# ---------------------------------------------------------------------------
+
+SOLID_TRACK_ORDER: tuple[Recommendation, ...] = (
     Recommendation.NO_ROUTINE_FOLLOWUP,
     Recommendation.OPTIONAL_CT_12MO,
     Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE,
     Recommendation.CT_3_6MO_THEN_18_24MO,
+    Recommendation.CONSIDER_PET_OR_BIOPSY,
+)
+
+SUBSOLID_TRACK_ORDER: tuple[Recommendation, ...] = (
+    Recommendation.NO_ROUTINE_FOLLOWUP,
     Recommendation.SUBSOLID_WORKUP,
     Recommendation.CONSIDER_PET_OR_BIOPSY,
 )
-# MULTIPLE_NODULE_DOMINANT is special-cased and not on the linear order axis.
+
+# Bins that only appear on the solid track.
+SOLID_ONLY: frozenset[Recommendation] = frozenset(
+    {
+        Recommendation.OPTIONAL_CT_12MO,
+        Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE,
+        Recommendation.CT_3_6MO_THEN_18_24MO,
+    }
+)
+
+# Bins that only appear on the sub-solid track.
+SUBSOLID_ONLY: frozenset[Recommendation] = frozenset(
+    {Recommendation.SUBSOLID_WORKUP}
+)
+
+# Backwards-compat alias — DEPRECATED, do not use in new code.
+# Kept so anyone consuming the old import gets a runtime error pointing
+# at the new track-aware API instead of a silently-wrong adjacency calc.
+RECOMMENDATION_ORDER = SOLID_TRACK_ORDER + (Recommendation.SUBSOLID_WORKUP,)
+# MULTIPLE_NODULE_DOMINANT is special-cased and not on any linear axis.
 
 
 # ---------------------------------------------------------------------------

@@ -45,12 +45,16 @@ Strict JSON. Fields are exhaustively listed; submitters can rely on the schema b
     "family_history_lung_ca": boolean,
     "emphysema": boolean,
     "pulmonary_fibrosis": boolean,
-    "known_primary_cancer": boolean,     // if true, case is excluded — present for parser sanity
-    "immunocompromised": boolean         // if true, case is excluded
+    "known_primary_cancer": boolean,     // if true, case is excluded from v0.1 — see below
+    "immunocompromised": boolean         // if true, case is excluded from v0.1 — see below
   },
   "context": "string"                    // free-text framing for the agent
 }
 ```
+
+The `known_primary_cancer` and `immunocompromised` flags are kept in the schema even though Fleischner 2017 excludes these patients. Reasons: (a) parser sanity — a mis-curated out-of-scope case is rejected loudly at `Case` construction time rather than silently scored; (b) forward-compat — v0.3+ may add an `out_of_scope_per_fleischner` bin where the agent must *recognize* exclusion as a reasoning task. v0.1's test set filters these out at curation; they never reach the agent.
+
+**Risk-factor encoding rationale**: v0.1 exposes individual risk-factor fields rather than a pre-computed `risk_category` binary because part of what we're measuring is whether the agent correctly *derives* high vs low risk from the case. The exact rule encoded in `radgym/oracle.py::derive_risk()` is: smoker (current or former) OR asbestos OR family history of lung CA OR emphysema OR pulmonary fibrosis → high; otherwise → low. Age is not a sole trigger (Fleischner does not specify an age threshold independent of other factors). This rule is the maintainer's reading of Fleischner 2017 and is open to redline — see §7.
 
 ### 1.3 Output schema (per case)
 
@@ -81,11 +85,12 @@ See `CONCEPT.md` §4.3. The full mapping from case features to bin will be encod
 
 | Source | Approx. count | Use type |
 |---|---|---|
-| Fleischner 2017 paper worked examples (Table 1 + body) | ~20 | Direct application of the published examples |
-| Radiopaedia public cases tagged "pulmonary nodule" | ~60 | Adapted from public case writeups (CC BY-NC-SA — attribution per case) |
+| Fleischner 2017 paper worked examples (Table 1 + body) | ~20 | Direct application of the published examples; also encoded in `tests/test_fleischner_paper_examples.py` as the launch gate |
 | OpenI (NLM Open-i) excerpts mentioning pulmonary nodules | ~30 | Pulled from public NLM data |
 | Radiology Assistant public articles on nodule workup | ~20 | Paraphrased illustrative cases |
-| Synthetic cases (maintainer-authored) | ~70 | Edge cases, bin boundaries, risk-factor combinations |
+| Synthetic cases (maintainer-authored) | ~130 | Edge cases, bin boundaries, risk-factor combinations |
+
+**Radiopaedia is deliberately excluded as a source.** Their content is CC BY-NC-SA, and the NC clause creates an unresolvable question about whether a commercial vendor benchmarking their model against RadGym constitutes commercial use of derivative data. v0.1 sidesteps this entirely by sourcing only from (a) factual algorithm-output content (Fleischner paper examples — facts about an algorithm's output are not copyrightable), (b) public-domain NLM data (OpenI), (c) maintainer-authored synthetic cases. Radiology Assistant cases are paraphrased to the maintainer's own clinical voice, and only the *structural pattern* of a case is borrowed, not the prose.
 
 Every case has a `source` field in its JSON metadata. Public-source cases reference the original (URL or DOI); synthetic cases note `source: synthetic_maintainer_authored`.
 
@@ -95,30 +100,47 @@ The maintainer (radiology background, 3 years clinical experience) personally co
 
 1. **Construct or extract** the clinical narrative.
 2. **Encode** the structured fields per §1.2.
-3. **Determine the ground-truth recommendation** by applying Fleischner 2017 directly.
+3. **Determine the ground-truth recommendation** by applying Fleischner 2017 directly. **The maintainer commits to a label *before* seeing the oracle's prediction** — the case authoring tool deliberately exposes the maintainer's answer first, oracle second, to avoid anchoring on the algorithm.
 4. **Record any ambiguity** in a `notes` field — cases with genuine ambiguity (e.g., size exactly at a threshold, mixed risk factors) are flagged for either inclusion (as deliberate edge cases) or exclusion.
-5. **Cross-check** against `scoring/fleischner_oracle.py` — the rules engine must produce the same recommendation as the maintainer's ground truth. Disagreements are resolved before the case enters the test set.
+5. **Cross-check** against `radgym/oracle.py` — disagreements between the maintainer's label and the oracle are resolved before the case enters the test set. Three possible resolutions:
+    - Maintainer's reading of Fleischner was wrong → label updated to oracle.
+    - Oracle has a bug → fix oracle, re-run all existing cases.
+    - Case is genuinely outside Fleischner's algorithmic scope (e.g., benign features, prior comparison) → exclude.
 
-### 2.3 Public vs hidden split
+### 2.3 Inter-rater reliability
+
+External review identified single-maintainer labeling as the largest credibility gap. **Pre-launch plan**: once ~50 cases are curated, recruit ≥1 external radiologist (target: chest-interested resident or fellow, secondary plan: paid attending moonlighter) to blind-label a random 30-case sample. Report Cohen's κ in METHODOLOGY before tagging v0.1.0. Disagreements are reviewed by both raters and resolved by reference to the Fleischner 2017 paper; if neither rater can reconcile, the case is excluded from the test set.
+
+### 2.4 Oracle vs ground truth — separation of concerns
+
+External review item #6 noted a circularity risk where the oracle simultaneously labels cases, scores submissions, and serves as a baseline. Mitigations in v0.1:
+
+- **Maintainer-first labeling**: the case authoring tool prompts the maintainer for the recommendation before showing the oracle's prediction. Labels are the maintainer's, not the oracle's.
+- **Independent paper-example gate**: `tests/test_fleischner_paper_examples.py` round-trips ~12 worked examples from MacMahon 2017 against the oracle. The oracle must produce the paper's stated answer 100% of the time before v0.1 ships. This is an external validation of the oracle independent of the maintainer's own labels.
+- **Inter-rater κ**: see §2.3.
+- **v0.2 stretch goal**: an independently-reimplemented baseline rules engine (separate from `radgym/oracle.py`) that scores against the same hidden test set. Disagreement between the two implementations of the algorithm would surface ambiguity in the algorithm itself.
+
+### 2.5 Public vs hidden split
 
 - **Public dev split (50 cases)**: published in `cases/v0.1/dev/`. Used by submitters to debug their prompts. Includes ground-truth labels.
-- **Hidden test split (150 cases)**: never published. Lives in a private Git submodule or a HuggingFace private dataset. Submissions are scored against this split.
+- **Hidden test split (150 cases)**: never published. Lives in a private Git submodule or a HuggingFace private dataset. Submissions are scored against this split, and **only aggregate metrics are returned to submitters** (see §4.2).
 
 Both splits draw from the same source mix and the same distribution of bin labels.
 
-### 2.4 Contamination resistance
+### 2.6 Contamination resistance
 
-LLM training data inevitably includes Fleischner 2017 and likely includes Radiopaedia case writeups. RadGym addresses this:
+LLM training data inevitably includes Fleischner 2017 and likely includes Radiology Assistant case writeups. RadGym addresses this:
 
 1. **Paraphrasing**: All extracted cases are paraphrased by the maintainer; verbatim language from the source guideline or case database is avoided in the `presentation` and `context` fields.
 2. **Structural variation**: The clinical narrative is rewritten so that surface n-grams differ from the source. The *clinical content* is preserved; the *prose* is not.
-3. **Synthetic edge cases**: ~35% of the test set is fully synthetic, parameterized along the Fleischner decision tree to ensure coverage of bin boundaries.
-4. **No verbatim Fleischner clauses** appear in any case. The agent must apply the algorithm; it cannot pattern-match memorized text.
-5. **Hidden test set** is never published, period. Submission outputs are returned to the submitter; the test cases themselves are not.
+3. **N-gram overlap as a CI gate**: a script (planned for the build runner) computes the longest n-gram overlap between every case's `presentation`+`context` and the Fleischner 2017 paper text. Cases with overlap exceeding a threshold (TBD, target: max 5-gram match) fail CI. This makes paraphrasing a *checked invariant* rather than an aspiration.
+4. **Synthetic edge cases**: ~65% of the test set is fully synthetic, parameterized along the Fleischner decision tree to ensure coverage of bin boundaries.
+5. **No verbatim Fleischner clauses** appear in any case. The agent must apply the algorithm; it cannot pattern-match memorized text.
+6. **Hidden test set** is never published, period. Submission outputs are returned to the submitter as aggregate metrics; the test cases themselves and per-case outcomes are not.
 
 This is not contamination-proof — no benchmark can be against a model that *has* seen Fleischner 2017 — but it makes "memorize verbatim" less useful than "apply the algorithm."
 
-### 2.5 Case distribution
+### 2.7 Case distribution
 
 Target distribution for v0.1 (subject to maintainer revision):
 
@@ -129,21 +151,25 @@ Target distribution for v0.1 (subject to maintainer revision):
 | `ct_6_12mo_then_18_24mo_if_stable` | 15% | Mid-range, common bin |
 | `ct_3_6mo_then_18_24mo` | 20% | Most algorithm branches converge here |
 | `consider_pet_or_biopsy` | 15% | Tests recognition of higher-risk findings |
-| `ct_3_6mo_subsolid` | 15% | Tests sub-solid handling |
+| `subsolid_workup` | 15% | Tests sub-solid handling (covers GGN q2y/5y and part-solid annual/5y; v0.2 will split) |
 | `multiple_nodule_dominant` | 5% | Tests dominant-nodule rule (small for v0.1) |
 
-Roughly uniform across the main bins, with deliberate over-sampling of bin boundaries (e.g., nodules at exactly 6 mm and 8 mm) within each bin.
+This distribution is **uniform-ish across bins for benchmark resolution, not weighted by clinical prevalence.** Real-world incidental nodules are overwhelmingly <6mm — a prevalence-weighted benchmark would be ~70% `no_routine_followup` cases, which would (a) inflate exact_accuracy scores trivially, (b) provide little discrimination between agents on the harder bins, (c) hide failures on rare-but-critical cases. A `clinical_prevalence_weighted` secondary score may be added in v0.2 for those who want it; v0.1's headline composite is uniform-bin.
+
+Within each bin we deliberately over-sample bin boundaries (nodules at exactly 6 mm and 8 mm) to discriminate agents that approximate Fleischner from agents that truly apply it.
 
 ## 3. Scoring
 
 ### 3.1 Scoring function (v0.1)
 
-For each case, the agent's recommendation is compared to ground truth. Let:
+For each case, the agent's recommendation is compared to ground truth on the *appropriate adjacency track* (see §3.3). Let:
 
 - `correct` = recommended bin equals ground-truth bin
-- `adjacent_safe` = recommended bin is one step toward *more aggressive* follow-up than ground truth (over-following)
-- `adjacent_unsafe` = recommended bin is one step toward *less aggressive* follow-up than ground truth (under-following)
-- `wrong` = any other mismatch (≥2 bins off, in either direction)
+- `adjacent_safe` = recommended bin is one step toward *more aggressive* follow-up than ground truth, on the same track (over-following by one)
+- `adjacent_unsafe` = recommended bin is one step toward *less aggressive* follow-up than ground truth, on the same track (under-following by one)
+- `wrong_safe` = ≥2 bins over-following, same track
+- `wrong_unsafe` = ≥2 bins under-following, same track
+- `cross_track` = recommended bin is on the wrong track (e.g., `subsolid_workup` on a solid-nodule case, or `optional_ct_12mo` on a sub-solid case). Scored as `wrong_unsafe`-equivalent because the agent picked the wrong *kind* of follow-up.
 - `malformed` = output failed schema validation
 
 Per-case score:
@@ -153,45 +179,73 @@ Per-case score:
 | `correct` | 1.00 |
 | `adjacent_safe` | 0.50 |
 | `adjacent_unsafe` | -0.25 |
-| `wrong` (off by ≥2, over-following) | 0.00 |
-| `wrong` (off by ≥2, under-following) | -0.50 |
+| `wrong_safe` (off by ≥2, over-following) | 0.00 |
+| `wrong_unsafe` (off by ≥2, under-following) | -0.50 |
+| `cross_track` (wrong follow-up type) | -0.50 |
 | `malformed` | 0.00 |
 
-**Composite score for a submission** = `100 × (sum of per-case scores) / N`, where N is the test set size (150 for v0.1 hidden). The composite is bounded to [-50, 100] but typical good agents will fall in [40, 90].
+**Composite score for a submission** = `100 × (sum of per-case scores) / N`. The composite is bounded to `[-50, 100]`. Typical good agents fall in `[40, 90]`.
 
 ### 3.2 Why asymmetric
 
 Under-following a Fleischner-flagged nodule means missing a potentially malignant lesion — the clinically dangerous failure mode. Over-following means extra imaging cost and patient anxiety — a real harm but a recoverable one. The score reflects this asymmetry, matching the maintainer's clinical instinct.
 
-### 3.3 Bin ordering for adjacency
+Why is `malformed` scored 0.00 (above `wrong_unsafe`) rather than penalized harder? Maintainer judgment call: a malformed output is *engagement failure* — the agent refused or broke. A `wrong_unsafe` output is *engaged dangerously* — the agent confidently recommended undertreatment. We prefer agents that fail loudly (malformed) to agents that fail silently into harm (`wrong_unsafe`), so malformed sits above unsafe in the scoring.
 
-Adjacency is computed on this ordered sequence (least → most aggressive follow-up):
+### 3.3 Adjacency tracks
+
+**Solid track** (least → most aggressive follow-up):
 
 1. `no_routine_followup`
 2. `optional_ct_12mo`
 3. `ct_6_12mo_then_18_24mo_if_stable`
 4. `ct_3_6mo_then_18_24mo`
-5. `ct_3_6mo_subsolid`
-6. `consider_pet_or_biopsy`
+5. `consider_pet_or_biopsy`
 
-`multiple_nodule_dominant` is treated specially: a recommendation of `multiple_nodule_dominant` on a multiple-nodule case is scored against the dominant-nodule sub-recommendation (an additional field the agent must produce on those cases).
+**Sub-solid track** (least → most aggressive):
 
-### 3.4 Reported metrics
+1. `no_routine_followup`
+2. `subsolid_workup`
+3. `consider_pet_or_biopsy`
+
+`no_routine_followup` and `consider_pet_or_biopsy` are *shared* — they are the floor and ceiling of both tracks. A recommendation of `no_routine_followup` when truth is `subsolid_workup` scores `adjacent_unsafe` on the sub-solid track (under-following by one), NOT cross-track.
+
+`multiple_nodule_dominant` is special-cased and not on any track (see §3.4).
+
+External review flagged that an earlier draft put `subsolid_workup` at position 5 of a single linear axis, which produced the wrong outcome class for cross-track recommendations. The fix (this section) is encoded canonically in `radgym/scoring.py::_classify_against_truth()`.
+
+### 3.4 Multiple-nodule scoring
+
+When ground truth is `multiple_nodule_dominant`:
+
+- Agent picks `multiple_nodule_dominant` AND `dominant_nodule_recommendation` matches truth → `multiple_correct_full`, +1.00.
+- Agent picks `multiple_nodule_dominant` but `dominant_nodule_recommendation` is off → `multiple_correct_partial`, scaled by adjacency on the dominant nodule's track (max +0.25 for adjacent_safe, down to -0.25 for wrong_unsafe / cross_track).
+- Agent does not pick `multiple_nodule_dominant` → `multiple_wrong`, scored at half-weight against the dominant nodule's bin (recognition penalty).
+
+When ground truth is single-nodule but the agent hallucinated `multiple_nodule_dominant`, the agent's `dominant_nodule_recommendation` is scored against truth at half-weight.
+
+The required output schema field is `AgentResponse.dominant_nodule_recommendation` (see §1.3); it is required only when the agent's top-level `recommendation == multiple_nodule_dominant`.
+
+### 3.5 Reported metrics
 
 The leaderboard reports for each submission:
 
 - **`composite`** — the headline number (the asymmetric score, primary ranking).
-- **`exact_accuracy`** — % of cases with `correct` outcome (familiar baseline metric).
-- **`under_following_rate`** — % of cases scored as `adjacent_unsafe` or `wrong_unsafe`. **The "safety" metric.** Lower is better.
+- **`exact_accuracy`** — % of cases with `correct` or `multiple_correct_full` outcome (familiar baseline metric).
+- **`under_following_rate`** — % of cases scored as `adjacent_unsafe`, `wrong_unsafe`, or `cross_track`. **The "safety" metric.** Lower is better.
 - **`over_following_rate`** — % scored as `adjacent_safe` or `wrong_safe`.
+- **`cross_track_rate`** — % scored as `cross_track`. Surfaces a specific failure mode (agent picked the wrong follow-up type).
 - **`malformed_rate`** — % of malformed outputs (a robustness metric).
-- **`per_bin_accuracy`** — confusion matrix collapsed to per-bin accuracy.
 
 A submission is **not** rankable if `malformed_rate > 10%` — the agent failed to follow the output schema reliably enough to be evaluated.
 
-### 3.5 Statistical reporting
+Per-bin confusion matrices are computed internally but are **not** returned to external submitters in v0.1 (see §4.2 for the label-leak rationale). Aggregate per-bin accuracy may be returned in v0.2 once submission rate-limiting is in place.
+
+### 3.6 Statistical reporting
 
 With N=150, bootstrap 95% CIs are computed for the composite and shown next to point estimates. Submissions whose CI overlaps the rules-engine baseline are flagged as "not distinguishable from oracle" — useful information, not a penalty.
+
+**Determinism caveat**: `temperature=0` is not reproducible across providers (OpenAI fingerprint drift, Anthropic small-numerical variation, batched HF endpoints). v0.1 does not majority-vote; instead it records the model's `system_fingerprint` (where the provider supplies one) and acknowledges in the methodology that two runs of the same submission may produce composite scores differing within the bootstrap CI. v0.2 will add majority-of-3 sampling for closed-API submissions.
 
 ## 4. Submission
 
@@ -222,16 +276,35 @@ A submission is a JSON file with:
 1. Submitter fills the form on the HF Space (or PRs a JSON file to `submissions/`).
 2. The leaderboard runs the model on the hidden test set: for each case, fills the user-prompt template, calls the model, parses the JSON output.
 3. Scores are computed and posted to the leaderboard.
-4. Submitter receives a per-case breakdown (which cases were `correct`, `unsafe`, `malformed`, etc.) but **not** the cases themselves.
-5. Rate limit: 1 submission per submitter per 24 hours per model identifier, to prevent thrash.
+4. **Submitter receives only aggregate metrics** (composite, exact_accuracy, under/over_following_rate, cross_track_rate, malformed_rate). Per-case outcomes are NOT returned. **Why**: external review identified that per-case feedback combined with unbounded prompt variants enables iterative label probing — a submitter could binary-search the hidden test set's labels across many submissions. v0.1 closes this leak by returning aggregates only. v0.2 will reintroduce per-case feedback once submission rate-limiting and per-submitter caps are in place (see §4.3).
+5. The dev split (50 cases) ships with ground-truth labels, so submitters can debug prompts against full per-case feedback without touching the hidden set.
 
-### 4.3 Submitter-provided API keys
+### 4.3 Anti-abuse controls
 
-For closed-source models (OpenAI, Anthropic, Google), submitters can paste their API key into the HF Space's per-session secret field. The key is used only for that submission's evaluation and is not persisted. For open-weight models on HuggingFace, RadGym uses HuggingFace Inference Endpoints (no key required from submitter; rate-limited).
+External review flagged several submission-abuse vectors. v0.1 controls:
+
+- **Rate limit**: 1 submission per submitter per 24 hours per model identifier. Submitter is identified by GitHub handle (verified via HF Spaces OAuth where possible) — not a perfect anti-sybil, but raises the cost.
+- **Monthly cap**: maximum 30 submissions per GitHub identity per calendar month across all model identifiers. Combined with aggregate-only feedback, this caps the information a single actor can extract from the hidden set.
+- **Cost cap**: each submission is capped at a maximum total inference cost (token budget × case count) computed at submission time. Submissions exceeding the cap are rejected before running.
+- **Prompt size limit**: `system_prompt` ≤ 16k chars, `user_prompt_template` ≤ 4k chars. Prevents prompt-flood attacks against maintainer API quotas.
+- **No streaming / no tool calls** in v0.1. Single request/response per case.
+- **Submitter-provided API key required for closed-source providers** when monthly cap is exceeded. Maintainer-funded API budget covers initial baselines + a per-user free quota; beyond that, submitters bring their own key.
 
 ### 4.4 What counts as a "different" submission
 
-A submission is considered different from another if **any** of `model_identifier`, `system_prompt`, `user_prompt_template`, or `decoding.temperature` differ. This lets the leaderboard show prompt-engineering wins as distinct entries.
+A submission is considered different from another if **any** of `model_identifier`, `system_prompt`, `user_prompt_template`, or `decoding.temperature` differ. This lets the leaderboard show prompt-engineering wins as distinct entries. The 30/month cap prevents this from becoming a spam vector.
+
+### 4.5 Submitter-provided API keys
+
+For closed-source models (OpenAI, Anthropic, Google), submitters can paste their API key into the HF Space's per-session secret field. The key is used only for that submission's evaluation and is not persisted. For open-weight models on HuggingFace, RadGym uses HuggingFace Inference Endpoints (no key required from submitter; rate-limited).
+
+### 4.6 Cost model
+
+Maintainer-paid costs at launch:
+- 7 baselines × 200 cases × ~500 output tokens × current per-1M-token prices ≈ $5-15 one-time.
+- Per-user free quota: 1 free submission per GitHub identity per month using maintainer-funded API budget; beyond that, BYO key.
+
+Total maintainer cost projected at <$50/month at the expected v0.1 submission rate. If submission volume exceeds projections, the free quota is reduced before any other change.
 
 ## 5. Reference baselines
 

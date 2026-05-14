@@ -138,7 +138,13 @@ def test_scoring_round_trip_correct() -> None:
 
 
 def test_scoring_under_following_penalized_more_than_over() -> None:
-    """Asymmetric scoring: under-following is worse than over-following."""
+    """Asymmetric scoring: under-following is worse than over-following.
+
+    Use within-track bins so the test reflects intra-track adjacency, not
+    cross-track. CT_6_12MO → CT_3_6MO is one step more aggressive on the
+    solid track (safe); CT_3_6MO → CT_6_12MO is one step less aggressive
+    (unsafe).
+    """
     from radgym.schemas import GroundTruth
 
     truth = GroundTruth(
@@ -148,7 +154,7 @@ def test_scoring_under_following_penalized_more_than_over() -> None:
     )
     safe_response = AgentResponse(
         case_id="RGYM-v01-0001",
-        recommendation=Recommendation.SUBSOLID_WORKUP,  # one step more aggressive
+        recommendation=Recommendation.CONSIDER_PET_OR_BIOPSY,  # one step more aggressive on solid track
         rationale="over-following by one bin",
     )
     unsafe_response = AgentResponse(
@@ -162,6 +168,86 @@ def test_scoring_under_following_penalized_more_than_over() -> None:
     assert unsafe_score.outcome == "adjacent_unsafe"
     assert safe_score.points > unsafe_score.points
     assert unsafe_score.points < 0
+
+
+def test_cross_track_recommendation_scores_wrong_unsafe() -> None:
+    """SUBSOLID_WORKUP on a solid-nodule case is a track-type error.
+
+    External review item #1: this used to score adjacent_safe under
+    the old single-axis ordering, which is wrong. It must score
+    cross_track (-0.50, same magnitude as wrong_unsafe).
+    """
+    from radgym.schemas import GroundTruth
+
+    truth = GroundTruth(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.CT_3_6MO_THEN_18_24MO,  # solid track
+        source="synthetic_maintainer_authored",
+    )
+    wrong_track_response = AgentResponse(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.SUBSOLID_WORKUP,  # subsolid track
+        rationale="wrong follow-up type",
+    )
+    score = score_case(wrong_track_response, truth)
+    assert score.outcome == "cross_track"
+    assert score.points == -0.50
+
+
+def test_cross_track_reverse_direction() -> None:
+    """Solid-track bin on a subsolid case is also cross-track."""
+    from radgym.schemas import GroundTruth
+
+    truth = GroundTruth(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.SUBSOLID_WORKUP,  # subsolid track
+        source="synthetic_maintainer_authored",
+    )
+    wrong_track_response = AgentResponse(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.OPTIONAL_CT_12MO,  # solid track
+        rationale="wrong follow-up type",
+    )
+    score = score_case(wrong_track_response, truth)
+    assert score.outcome == "cross_track"
+
+
+def test_shared_bins_not_cross_track() -> None:
+    """NO_ROUTINE_FOLLOWUP and CONSIDER_PET_OR_BIOPSY appear on both tracks.
+
+    A recommendation of NO_ROUTINE_FOLLOWUP when truth is SUBSOLID_WORKUP
+    is under-following on the subsolid track — NOT cross-track.
+    """
+    from radgym.schemas import GroundTruth
+
+    truth = GroundTruth(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.SUBSOLID_WORKUP,
+        source="synthetic_maintainer_authored",
+    )
+    shared_floor_response = AgentResponse(
+        case_id="RGYM-v01-0001",
+        recommendation=Recommendation.NO_ROUTINE_FOLLOWUP,
+        rationale="under-following on subsolid track",
+    )
+    score = score_case(shared_floor_response, truth)
+    assert score.outcome == "adjacent_unsafe"
+    assert score.points == -0.25
+
+
+def test_public_leaderboard_view_omits_per_case() -> None:
+    """External review item #13: external submitters get aggregates only.
+
+    The public view must not contain per-case outcomes (label-leak vector).
+    """
+    from radgym.scoring import CaseScore, aggregate, public_leaderboard_view
+
+    scores = [CaseScore(f"RGYM-v01-{i:04d}", "correct", 1.0) for i in range(10)]
+    agg = aggregate(scores)
+    view = public_leaderboard_view(agg)
+    assert "per_case" not in view
+    assert "composite" in view
+    assert "cross_track_rate" in view  # exposed as a separate aggregate metric
 
 
 def test_malformed_rate_gate() -> None:
