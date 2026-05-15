@@ -116,55 +116,101 @@ class OracleResult:
 
 
 def _classify_single_solid(size_mm: float, risk: RiskCategory) -> tuple[Recommendation, str]:
-    """Fleischner 2017 single solid nodule rules.
+    """Fleischner 2017 Table 1A, single solid nodule rules.
 
-    +----------+-----------+----------------------------------------------+
-    | Size     | Risk      | Recommendation                                |
-    +----------+-----------+----------------------------------------------+
-    | <6 mm    | low       | No routine follow-up                          |
-    | <6 mm    | high      | Optional CT at 12 mo                          |
-    | 6-8 mm   | low       | CT 6-12 mo, then 18-24 mo if stable           |
-    | 6-8 mm   | high      | CT 3-6 mo, then 18-24 mo                      |
-    | >8 mm    | low       | CT 3-6 mo, then 18-24 mo (or PET/biopsy)      |
-    | >8 mm    | high      | Consider PET/biopsy                           |
-    +----------+-----------+----------------------------------------------+
+    Verbatim from Table 1A:
+
+    +----------+-----------+------------------------------------------------------+
+    | Size     | Risk      | Recommendation                                       |
+    +----------+-----------+------------------------------------------------------+
+    | <6 mm    | low       | No routine follow-up                                 |
+    | <6 mm    | high      | Optional CT at 12 months                             |
+    | 6-8 mm   | low       | CT 6-12 mo, then consider CT 18-24 mo                |
+    | 6-8 mm   | high      | CT 6-12 mo, then CT 18-24 mo  ← SAME interval as low |
+    | >8 mm    | low       | Consider CT 3 mo, PET/CT, or tissue sampling         |
+    | >8 mm    | high      | Consider CT 3 mo, PET/CT, or tissue sampling         |
+    +----------+-----------+------------------------------------------------------+
+
+    Note: 2005 Fleischner guidelines had distinct intervals for high-risk
+    6-8mm (CT at 3-6mo, then 9-12mo and 24mo) — the 2017 update simplified
+    this to a single 6-12mo / 18-24mo recommendation for both risk
+    categories at 6-8mm. The previous oracle version conflated the
+    two guidelines; this is the 2017 reading.
     """
     if size_mm < 6:
         if risk == "low":
             return (
                 Recommendation.NO_ROUTINE_FOLLOWUP,
-                f"Single solid nodule {size_mm} mm, low risk → no routine follow-up.",
+                f"Single solid nodule {size_mm} mm <6mm, low risk → no routine follow-up. (Table 1A)",
             )
         return (
             Recommendation.OPTIONAL_CT_12MO,
-            f"Single solid nodule {size_mm} mm, high risk → optional CT at 12 months.",
+            f"Single solid nodule {size_mm} mm <6mm, high risk → optional CT at 12 months. (Table 1A)",
         )
     if size_mm <= 8:
-        if risk == "low":
-            return (
-                Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE,
-                f"Single solid nodule {size_mm} mm, low risk → CT 6-12 mo, then 18-24 mo if stable.",
-            )
+        # Per Fleischner 2017 Table 1A: BOTH low- and high-risk 6-8mm route
+        # to CT 6-12mo then 18-24mo. (2005 guideline split them; 2017 unified.)
         return (
-            Recommendation.CT_3_6MO_THEN_18_24MO,
-            f"Single solid nodule {size_mm} mm, high risk → CT 3-6 mo, then 18-24 mo.",
+            Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE,
+            f"Single solid nodule {size_mm} mm (6-8mm), {risk} risk → CT 6-12 mo, then 18-24 mo. (Table 1A)",
         )
-    # >8 mm
-    if risk == "low":
-        return (
-            Recommendation.CT_3_6MO_THEN_18_24MO,
-            f"Single solid nodule {size_mm} mm, low risk → CT 3-6 mo, then 18-24 mo (or PET/biopsy).",
-        )
+    # >8 mm — both low and high risk route to PET/biopsy consideration.
     return (
         Recommendation.CONSIDER_PET_OR_BIOPSY,
-        f"Single solid nodule {size_mm} mm, high risk → consider PET/CT or biopsy.",
+        f"Single solid nodule {size_mm} mm >8mm, {risk} risk → consider CT 3 mo, PET/CT, or tissue sampling. (Table 1A)",
+    )
+
+
+def _classify_multiple_solid(
+    size_mm: float, risk: RiskCategory
+) -> tuple[Recommendation, str]:
+    """Fleischner 2017 Table 1A, MULTIPLE solid nodule rules.
+
+    Verbatim from Table 1A. Multiple-nodule rules are NOT the same as
+    single-nodule rules — the dominant nodule's individual rule does not
+    apply. Table 1A specifies its own multiple-row recommendations:
+
+    +----------+-----------+----------------------------------------------+
+    | Size     | Risk      | Recommendation                                |
+    +----------+-----------+----------------------------------------------+
+    | <6 mm    | low       | No routine follow-up                          |
+    | <6 mm    | high      | Optional CT at 12 months                      |
+    | 6-8 mm   | low       | CT 3-6 mo, then consider CT 18-24 mo          |
+    | 6-8 mm   | high      | CT 3-6 mo, then CT 18-24 mo                   |
+    | >8 mm    | low       | CT 3-6 mo, then consider CT 18-24 mo          |
+    | >8 mm    | high      | CT 3-6 mo, then CT 18-24 mo                   |
+    +----------+-----------+----------------------------------------------+
+
+    Note that multiple-nodule cases never route to CONSIDER_PET_OR_BIOPSY
+    in Table 1A — even >8mm multiples get the CT 3-6mo workup pathway.
+    The Comments column says "Use most suspicious nodule as guide to
+    management. Follow-up intervals may vary according to size and risk"
+    — so the multiple-rule output is the *case-level* recommendation;
+    individual nodule workup decisions remain the radiologist's judgment.
+    """
+    size_band = "lt6" if size_mm < 6 else ("6_8" if size_mm <= 8 else "gt8")
+
+    if size_band == "lt6":
+        if risk == "low":
+            return (
+                Recommendation.NO_ROUTINE_FOLLOWUP,
+                f"Multiple solid nodules, dominant {size_mm} mm <6mm, low risk → no routine follow-up. (Table 1A multiple-row)",
+            )
+        return (
+            Recommendation.OPTIONAL_CT_12MO,
+            f"Multiple solid nodules, dominant {size_mm} mm <6mm, high risk → optional CT at 12 months. (Table 1A multiple-row)",
+        )
+    # 6-8mm OR >8mm, regardless of risk → CT 3-6mo then 18-24mo
+    return (
+        Recommendation.CT_3_6MO_THEN_18_24MO,
+        f"Multiple solid nodules, dominant {size_mm} mm ({size_band}), {risk} risk → CT 3-6 mo, then 18-24 mo. (Table 1A multiple-row)",
     )
 
 
 def _classify_single_subsolid(
     nodule: Nodule, risk: RiskCategory
 ) -> tuple[Recommendation, SubsolidIntent, str]:
-    """Fleischner 2017 single sub-solid nodule rules.
+    """Fleischner 2017 Table 1B, SINGLE subsolid nodule rules.
 
     Ground-glass nodule (GGN), single:
       - <6 mm  → no routine follow-up
@@ -174,8 +220,8 @@ def _classify_single_subsolid(
       - <6 mm  → no routine follow-up
       - ≥6 mm  → CT 3-6 mo, then annual to 5y              [SUBSOLID_WORKUP / part_solid_annual_to_5y]
       - solid component ≥6 mm with concerning features → PET/biopsy
-        (v0.1 does not collect solid-component size separately; the
-         CONSIDER_PET_OR_BIOPSY path here is reserved for v0.2.)
+        (v0.1 does not collect solid-component size separately; that
+         path is reserved for v0.2.)
 
     Risk category does NOT modify subsolid recommendations in Fleischner
     2017 (subsolid nodules are managed by size + density only).
@@ -186,24 +232,57 @@ def _classify_single_subsolid(
             return (
                 Recommendation.NO_ROUTINE_FOLLOWUP,
                 "not_applicable",
-                f"Single GGN {size} mm <6 mm → no routine follow-up.",
+                f"Single GGN {size} mm <6 mm → no routine follow-up. (Table 1B)",
             )
         return (
             Recommendation.SUBSOLID_WORKUP,
             "ggn_q2y_to_5y",
-            f"Single GGN {size} mm ≥6 mm → CT 6-12 mo, then q2y to 5 years.",
+            f"Single GGN {size} mm ≥6 mm → CT 6-12 mo, then q2y to 5 years. (Table 1B)",
         )
     # part-solid
     if size < 6:
         return (
             Recommendation.NO_ROUTINE_FOLLOWUP,
             "not_applicable",
-            f"Single part-solid nodule {size} mm <6 mm → no routine follow-up.",
+            f"Single part-solid nodule {size} mm <6 mm → no routine follow-up. (Table 1B)",
         )
     return (
         Recommendation.SUBSOLID_WORKUP,
         "part_solid_annual_to_5y",
-        f"Single part-solid nodule {size} mm ≥6 mm → CT 3-6 mo, then annual to 5 years.",
+        f"Single part-solid nodule {size} mm ≥6 mm → CT 3-6 mo, then annual to 5 years. (Table 1B)",
+    )
+
+
+def _classify_multiple_subsolid(
+    size_mm: float,
+) -> tuple[Recommendation, SubsolidIntent, str]:
+    """Fleischner 2017 Table 1B, MULTIPLE subsolid nodule rules.
+
+    Table 1B "Multiple" row (does not distinguish GGN from part-solid):
+
+    +----------+----------------------------------------------------------+
+    | Size     | Recommendation                                            |
+    +----------+----------------------------------------------------------+
+    | <6 mm    | CT 3-6 mo. If stable, consider CT at 2 and 4 years.       |
+    | ≥6 mm    | CT 3-6 mo. Subsequent management based on most suspicious |
+    +----------+----------------------------------------------------------+
+
+    Both rows are MORE aggressive than the single-nodule subsolid rule
+    for the same size (single <6mm = no follow-up; multiple <6mm = CT 3-6mo).
+    Both map to SUBSOLID_WORKUP in v0.1's bin set — the specific
+    interval distinction is captured in the rationale, not the bin.
+    Risk category does not modify subsolid follow-up.
+    """
+    if size_mm < 6:
+        return (
+            Recommendation.SUBSOLID_WORKUP,
+            "ggn_q2y_to_5y",  # closest match for the q2y/4y interval
+            f"Multiple subsolid nodules, dominant {size_mm} mm <6 mm → CT 3-6 mo, then CT 2 and 4 yr. (Table 1B multiple-row)",
+        )
+    return (
+        Recommendation.SUBSOLID_WORKUP,
+        "ggn_q2y_to_5y",  # most-suspicious-guides — defaulting to longer interval
+        f"Multiple subsolid nodules, dominant {size_mm} mm ≥6 mm → CT 3-6 mo, then per most suspicious. (Table 1B multiple-row)",
     )
 
 
@@ -329,23 +408,35 @@ def apply_fleischner_2017(
             reasoning=trace,
         )
 
-    # Multiple nodules — recommendation is keyed to the dominant.
+    # Multiple nodules — Fleischner 2017 Table 1A/1B "Multiple" rows.
+    # The case-level recommendation comes from the multiple-rules table
+    # (NOT from the dominant nodule's single-rules row). We surface this
+    # as MULTIPLE_NODULE_DOMINANT at the top level (the case-shape
+    # indicator) and put the actual multiple-rule recommendation into
+    # the dominant_nodule_recommendation field — which is what v0.1's
+    # scoring compares against ground-truth (METHODOLOGY §3.4).
     dominant = _dominant_nodule(nodule)
+
+    case_level_intent: SubsolidIntent
     if dominant.type == "solid":
-        dom_rec, dom_trace = _classify_single_solid(dominant.size_mm, risk)
-        dom_intent: SubsolidIntent = "not_applicable"
+        case_level_rec, case_level_trace = _classify_multiple_solid(
+            dominant.size_mm, risk
+        )
+        case_level_intent = "not_applicable"
     else:
-        dom_rec, dom_intent, dom_trace = _classify_single_subsolid(dominant, risk)
+        case_level_rec, case_level_intent, case_level_trace = (
+            _classify_multiple_subsolid(dominant.size_mm)
+        )
 
     trace = (
         f"Multiple nodules ({1 + len(nodule.additional_nodules)} total). "
         f"Dominant: {dominant.type} {dominant.size_mm} mm. "
-        f"{dom_trace}"
+        f"{case_level_trace}"
     )
     return OracleResult(
         recommendation=Recommendation.MULTIPLE_NODULE_DOMINANT,
-        dominant_nodule_recommendation=dom_rec,
+        dominant_nodule_recommendation=case_level_rec,
         risk_category=risk,
-        subsolid_intent=dom_intent,
+        subsolid_intent=case_level_intent,
         reasoning=trace,
     )

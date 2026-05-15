@@ -311,16 +311,11 @@ SUBSOLID_CASES: list[T1Case] = [
         multiplicity="multiple",
         risk="low",
         expected_bin=Recommendation.MULTIPLE_NODULE_DOMINANT,
-        # Each individual sub-6mm subsolid alone would be NO_ROUTINE_FOLLOWUP
-        # per Table 1B single row. Table 1B's multiple <6mm row says "CT at
-        # 3-6 months. If stable, consider CT at 2 and 4 years" which is
-        # MORE aggressive than the single rule. The oracle's current
-        # behavior reports the dominant's single rule. MAINTAINER REDLINE:
-        # for multiple subsolid <6mm, do we map to NO_ROUTINE_FOLLOWUP
-        # (per individual nodule) or to SUBSOLID_WORKUP (per Table 1B
-        # multiple row)? Current oracle: NO_ROUTINE_FOLLOWUP. Paper: more
-        # aggressive than single. This is a real bin-mapping question.
-        expected_dominant_bin=Recommendation.NO_ROUTINE_FOLLOWUP,
+        # Table 1B "Multiple <6mm": "CT at 3-6 months. If stable, consider
+        # CT at 2 and 4 years." — MORE aggressive than the single-nodule
+        # <6mm rule (which is no follow-up). Maps to SUBSOLID_WORKUP per
+        # v0.1's bin set; the q2y/4y interval is captured in the rationale.
+        expected_dominant_bin=Recommendation.SUBSOLID_WORKUP,
     ),
     T1Case(
         name="multiple_subsolid_6mm_plus",
@@ -374,25 +369,9 @@ def _build_case(tc: T1Case) -> Case:
     )
 
 
-KNOWN_ORACLE_BUGS: set[str] = {
-    # These 4 Table 1 rows currently fail the oracle. The failure is the
-    # launch gate doing its job — catching real bin-mapping errors before
-    # cases land. Maintainer redline pending; once oracle is fixed, remove
-    # the test ID from this set and the xfail goes away.
-    #
-    # Specifically:
-    # - single_solid_gt8mm_low: paper says PET/CT or biopsy; oracle says
-    #   CT_3_6MO. Bin mapping for low-risk >8mm needs revision.
-    # - single_solid_6_8mm_high: paper says CT 6-12mo (SAME as low-risk
-    #   6-8mm); oracle says CT 3-6mo. Oracle's single_solid table is wrong.
-    # - multiple_solid_6_8mm_low + multiple_solid_gt8mm_high: paper has
-    #   distinct rules for multiple-nodule rows; oracle routes through
-    #   single-nodule rules. Multiple-rule table not yet implemented.
-    "single_solid_gt8mm_low",
-    "single_solid_6_8mm_high",
-    "multiple_solid_6_8mm_low",
-    "multiple_solid_gt8mm_high",
-}
+KNOWN_ORACLE_BUGS: set[str] = set()
+# (Empty as of the oracle rewrite. Any future Table 1 cell that fails
+# should be added here as a temporary xfail while the fix is developed.)
 
 
 @pytest.mark.parametrize(

@@ -86,10 +86,12 @@ def test_risk_derivation_table() -> None:
         (5, "former", Recommendation.OPTIONAL_CT_12MO),
         # 6-8 mm, low risk: CT_6_12MO_THEN_18_24MO_IF_STABLE
         (7, "never", Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE),
-        # 6-8 mm, high risk: CT_3_6MO_THEN_18_24MO
-        (7, "current", Recommendation.CT_3_6MO_THEN_18_24MO),
-        # >8 mm, low risk: CT_3_6MO_THEN_18_24MO
-        (10, "never", Recommendation.CT_3_6MO_THEN_18_24MO),
+        # 6-8 mm, high risk: per Table 1A, SAME bin as low risk
+        # (2017 unified; 2005 split them — see oracle._classify_single_solid docstring)
+        (7, "current", Recommendation.CT_6_12MO_THEN_18_24MO_IF_STABLE),
+        # >8 mm, low risk: CONSIDER_PET_OR_BIOPSY per Table 1A
+        # (paper: "Consider CT at 3 months, PET/CT, or tissue sampling")
+        (10, "never", Recommendation.CONSIDER_PET_OR_BIOPSY),
         # >8 mm, high risk: CONSIDER_PET_OR_BIOPSY
         (10, "current", Recommendation.CONSIDER_PET_OR_BIOPSY),
     ],

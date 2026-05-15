@@ -25,10 +25,10 @@
   },
   "ground_truth": {
     "case_id": "RGYM-v01-0002",
-    "recommendation": "ct_3_6mo_then_18_24mo",
+    "recommendation": "ct_6_12mo_then_18_24mo_if_stable",
     "dominant_nodule_recommendation": null,
     "maintainer_assigned_risk": "high",
     "source": "synthetic_maintainer_authored",
-    "notes": "Canonical 6-8 mm high-risk anchor case; spiculated morphology not used by oracle but realistic for high-risk presentation."
+    "notes": "Canonical 6-8 mm high-risk anchor case. Per Fleischner 2017 Table 1A, the 6-8mm bin recommendation is the SAME for low- and high-risk (CT 6-12mo then 18-24mo). Spiculated morphology not used by oracle but realistic for high-risk presentation."
   }
 }
