@@ -259,10 +259,15 @@ def test_public_leaderboard_view_omits_per_case() -> None:
     assert "cross_track_rate" in view  # exposed as a separate aggregate metric
 
 
-def test_malformed_rate_gate() -> None:
-    """A submission with malformed_rate > 10% is not rankable."""
+def test_malformed_rate_gate_strict() -> None:
+    """v0.1 rankable threshold tightened to malformed_rate ≤ 5% (was 10%).
+
+    External review #4: the original 10% threshold was wide enough to
+    incentivize strategic refusal on hardest cases. 5% closes that gap.
+    """
     from radgym.scoring import CaseScore
 
+    # 20% malformed — should fail rankable under either old or new threshold.
     scores = [CaseScore(f"RGYM-v01-{i:04d}", "correct", 1.0) for i in range(80)]
     scores += [
         CaseScore(f"RGYM-v01-{i:04d}", "malformed", 0.0) for i in range(80, 100)
@@ -270,3 +275,29 @@ def test_malformed_rate_gate() -> None:
     agg = aggregate(scores)
     assert agg.malformed_rate == 0.20
     assert not agg.rankable
+
+
+def test_malformed_rate_gate_boundary_6pct_not_rankable() -> None:
+    """6% malformed is over the v0.1 5% threshold → not rankable."""
+    from radgym.scoring import CaseScore
+
+    scores = [CaseScore(f"RGYM-v01-{i:04d}", "correct", 1.0) for i in range(94)]
+    scores += [
+        CaseScore(f"RGYM-v01-{i:04d}", "malformed", 0.0) for i in range(94, 100)
+    ]
+    agg = aggregate(scores)
+    assert agg.malformed_rate == 0.06
+    assert not agg.rankable, "6% malformed must not be rankable under the 5% gate"
+
+
+def test_malformed_rate_gate_boundary_5pct_rankable() -> None:
+    """Exactly 5% malformed is at the boundary and remains rankable."""
+    from radgym.scoring import CaseScore
+
+    scores = [CaseScore(f"RGYM-v01-{i:04d}", "correct", 1.0) for i in range(95)]
+    scores += [
+        CaseScore(f"RGYM-v01-{i:04d}", "malformed", 0.0) for i in range(95, 100)
+    ]
+    agg = aggregate(scores)
+    assert agg.malformed_rate == 0.05
+    assert agg.rankable, "5% malformed should still be rankable (boundary)"

@@ -1,8 +1,16 @@
 # RadGym — Methodology (v0.1)
 
 **Document status:** v0.1 design draft, awaiting maintainer redline.
-**Last updated:** 2026-05-14
+**Last updated:** 2026-05-15
 **Companion doc:** `CONCEPT.md` (the *why*); this doc is the *how*.
+
+> **Where the canonical definitions live.** This document is the human-readable spec. The authoritative implementation is in code:
+>
+> - **Schemas (input, output, ground truth):** `radgym/schemas.py` — `Case`, `Nodule`, `Patient`, `AgentResponse`, `GroundTruth`, `CaseRecord`. All Pydantic v2 strict; validators enforce the conditional-required rules described here (e.g., `dominant_nodule_recommendation` iff `recommendation == multiple_nodule_dominant`; `additional_nodules` non-empty iff `multiplicity == multiple`).
+> - **Oracle / rules engine:** `radgym/oracle.py` — Fleischner 2017 Table 1A/1B as executable code. Verified cell-by-cell by `tests/test_fleischner_table1.py` (19/19 launch gate).
+> - **Scoring:** `radgym/scoring.py` — adjacency tracks, asymmetric outcomes, multiple-nodule decision table, aggregation.
+>
+> When this document and the code disagree, the code is authoritative. External reviewers should read both. A pointer to each code location appears at the head of the relevant section below.
 
 ---
 
@@ -54,7 +62,11 @@ Strict JSON. Fields are exhaustively listed; submitters can rely on the schema b
 
 The `known_primary_cancer` and `immunocompromised` flags are kept in the schema even though Fleischner 2017 excludes these patients. Reasons: (a) parser sanity — a mis-curated out-of-scope case is rejected loudly at `Case` construction time rather than silently scored; (b) forward-compat — v0.3+ may add an `out_of_scope_per_fleischner` bin where the agent must *recognize* exclusion as a reasoning task. v0.1's test set filters these out at curation; they never reach the agent.
 
-**Risk-factor encoding rationale**: v0.1 exposes individual risk-factor fields rather than a pre-computed `risk_category` binary because part of what we're measuring is whether the agent correctly *derives* high vs low risk from the case. The exact rule encoded in `radgym/oracle.py::derive_risk()` is: smoker (current or former) OR asbestos OR family history of lung CA OR emphysema OR pulmonary fibrosis → high; otherwise → low. Age is not a sole trigger (Fleischner does not specify an age threshold independent of other factors). This rule is the maintainer's reading of Fleischner 2017 and is open to redline — see §7.
+**Risk-factor encoding rationale**: v0.1 exposes individual risk-factor fields rather than a pre-computed `risk_category` binary because part of what we're measuring is whether the agent correctly *derives* high vs low risk from the case. The exact rule encoded in `radgym/oracle.py::derive_risk()` is: smoker (current or former) OR asbestos OR family history of lung CA OR emphysema OR pulmonary fibrosis → high; otherwise → low.
+
+**Age is deliberately excluded from the v0.1 heuristic risk derivation.** Fleischner 2017 lists "older age" as a high-risk contributor but specifies no numeric threshold; the published recommendation is to "consider all relevant risk factors" without a formula. Hard-coding any age threshold (≥60? ≥65? ≥70?) into the heuristic would be a maintainer choice that the paper does not authorize. v0.1 keeps the heuristic conservative — it captures the unambiguous risk modifiers and leaves age judgment to the maintainer-assigned risk override (`GroundTruth.maintainer_assigned_risk`). Agents are still free to consider age in their reasoning; the heuristic is only a sanity-check baseline, not the source of ground-truth risk classification (see §2.2 and §2.4).
+
+**Heuristic vs ground-truth risk separation.** Because Fleischner does not provide a mechanical risk formula, ground-truth risk is the maintainer's clinical synthesis, stored in `GroundTruth.maintainer_assigned_risk`. The oracle accepts a `risk_override` parameter and uses the maintainer's assignment when computing the Table 1 lookup; `derive_risk()` is invoked only as a fallback diagnostic.
 
 ### 1.3 Output schema (per case)
 
@@ -62,19 +74,23 @@ The `known_primary_cancer` and `immunocompromised` flags are kept in the schema 
 {
   "case_id": "RGYM-v01-XXXX",
   "recommendation": "<one of the bin IDs from CONCEPT §4.3>",
+  "dominant_nodule_recommendation": "<bin ID, REQUIRED iff recommendation == 'multiple_nodule_dominant', else null/omitted>",
   "rationale": "string"                   // collected; not scored in v0.1
 }
 ```
 
 Strict JSON, validated by Pydantic on receipt. Malformed outputs score 0 for that case with a `malformed_output` flag.
 
+The conditional-required rule for `dominant_nodule_recommendation` is enforced by `radgym/schemas.py::AgentResponse._multiple_requires_dominant()` — `dominant_nodule_recommendation` MUST be present when `recommendation == "multiple_nodule_dominant"` and MUST be null/omitted otherwise. A response violating this rule is `malformed`. The canonical Pydantic models live in `radgym/schemas.py` (`AgentResponse`, `Case`, `GroundTruth`, `Nodule`, `Patient`); when this doc and the code disagree, the code is authoritative.
+
 ### 1.4 Recommendation bins (canonical list)
 
-See `CONCEPT.md` §4.3. The full mapping from case features to bin will be encoded in `scoring/fleischner_oracle.py`. This oracle:
+See `CONCEPT.md` §4.3. The full mapping from case features to bin is encoded in `radgym/oracle.py`. This oracle:
 
 - Is the deterministic Fleischner 2017 algorithm in code.
 - Is the answer key for scoring.
-- Is also a reference baseline ("rules engine" — submitted publicly to the leaderboard).
+- Is also a reference baseline ("rules engine" — submitted publicly to the leaderboard via a thin wrapper in `radgym/baselines/oracle_baseline.py`, which converts `OracleResult` into a valid `AgentResponse` JSON for leaderboard submission).
+- **Is verified against the verbatim Fleischner 2017 Table 1 by `tests/test_fleischner_table1.py` (19/19 cells round-trip — the launch gate).**
 - **Is reviewed by the maintainer (radiology background) for clinical correctness before any case is scored.**
 
 ## 2. Case construction
@@ -133,7 +149,7 @@ LLM training data inevitably includes Fleischner 2017 and likely includes Radiol
 
 1. **Paraphrasing**: All extracted cases are paraphrased by the maintainer; verbatim language from the source guideline or case database is avoided in the `presentation` and `context` fields.
 2. **Structural variation**: The clinical narrative is rewritten so that surface n-grams differ from the source. The *clinical content* is preserved; the *prose* is not.
-3. **N-gram overlap as a CI gate**: a script (planned for the build runner) computes the longest n-gram overlap between every case's `presentation`+`context` and the Fleischner 2017 paper text. Cases with overlap exceeding a threshold (TBD, target: max 5-gram match) fail CI. This makes paraphrasing a *checked invariant* rather than an aspiration.
+3. **N-gram overlap as a CI gate (refined per external review #10)**: a script (planned for the build runner) computes overlap between every case's `presentation`+`context` and the Fleischner 2017 paper text. The naive "longest 5-gram overlap" approach has false positives — common clinical phrasing like "CT at 6-12 months" appears unavoidably. The actual gate uses three signals: (a) longest contiguous n-gram match excluding a maintainer-curated boilerplate allowlist (the Fleischner-mandated phrases that every case must repeat); (b) sentence-level Jaccard similarity (token-based, stopword-filtered) — flags cases where structural sentence patterns are too close to the source; (c) ROUGE-L F-score against the paper. A case fails CI if it exceeds *all three* thresholds (a single false positive is acceptable; correlated failures across three independent metrics indicate genuine copying). Thresholds will be calibrated against ~10 synthetic and ~10 Fleischner-paper-example cases before launch.
 4. **Synthetic edge cases**: ~65% of the test set is fully synthetic, parameterized along the Fleischner decision tree to ensure coverage of bin boundaries.
 5. **No verbatim Fleischner clauses** appear in any case. The agent must apply the algorithm; it cannot pattern-match memorized text.
 6. **Hidden test set** is never published, period. Submission outputs are returned to the submitter as aggregate metrics; the test cases themselves and per-case outcomes are not.
@@ -210,21 +226,55 @@ Why is `malformed` scored 0.00 (above `wrong_unsafe`) rather than penalized hard
 
 `no_routine_followup` and `consider_pet_or_biopsy` are *shared* — they are the floor and ceiling of both tracks. A recommendation of `no_routine_followup` when truth is `subsolid_workup` scores `adjacent_unsafe` on the sub-solid track (under-following by one), NOT cross-track.
 
+**v0.1 simplification**: the oracle never *outputs* `consider_pet_or_biopsy` for subsolid cases in v0.1 because the part-solid "solid component ≥6mm with concerning features → PET/biopsy" rule from Table 1B requires solid-component size, which v0.1's schema does not collect (deferred to v0.2). However, the bin is still reachable by *agents*: an agent that correctly identifies a part-solid nodule with worrisome features in the case prose is free to recommend `consider_pet_or_biopsy`, and would score `adjacent_safe` (over-following by one) against a v0.1 ground-truth `subsolid_workup`. This is a known scoring asymmetry: agents can be more clinically nuanced than the oracle and still score well, just not perfectly. v0.2 will fix this by adding solid-component size to the schema.
+
 `multiple_nodule_dominant` is special-cased and not on any track (see §3.4).
 
 External review flagged that an earlier draft put `subsolid_workup` at position 5 of a single linear axis, which produced the wrong outcome class for cross-track recommendations. The fix (this section) is encoded canonically in `radgym/scoring.py::_classify_against_truth()`.
 
-### 3.4 Multiple-nodule scoring
+### 3.4 Multiple-nodule scoring (complete decision table)
 
-When ground truth is `multiple_nodule_dominant`:
+Multiple-nodule scoring is intricate because two orthogonal things must match: (a) the agent recognized the case as multiple (`recommendation == multiple_nodule_dominant`), and (b) the agent's `dominant_nodule_recommendation` matches what Table 1A/1B's multiple-row prescribes. Below is the complete `(ground_truth_recommendation, agent_recommendation, dominant_subbin_outcome) → points` table, in lockstep with `radgym/scoring.py::_score_multiple()` and `score_case()`. The code is authoritative.
 
-- Agent picks `multiple_nodule_dominant` AND `dominant_nodule_recommendation` matches truth → `multiple_correct_full`, +1.00.
-- Agent picks `multiple_nodule_dominant` but `dominant_nodule_recommendation` is off → `multiple_correct_partial`, scaled by adjacency on the dominant nodule's track (max +0.25 for adjacent_safe, down to -0.25 for wrong_unsafe / cross_track).
-- Agent does not pick `multiple_nodule_dominant` → `multiple_wrong`, scored at half-weight against the dominant nodule's bin (recognition penalty).
+#### Case A: ground truth is `multiple_nodule_dominant`
 
-When ground truth is single-nodule but the agent hallucinated `multiple_nodule_dominant`, the agent's `dominant_nodule_recommendation` is scored against truth at half-weight.
+| Agent picks `multiple_nodule_dominant`? | Sub-bin outcome (agent's `dominant_nodule_recommendation` vs truth's) | Points | Outcome label |
+|---|---|---|---|
+| Yes | `correct` (sub-bin matches) | **+1.00** | `multiple_correct_full` |
+| Yes | `adjacent_safe` | +0.25 | `multiple_correct_partial` |
+| Yes | `adjacent_unsafe` | -0.10 | `multiple_correct_partial` |
+| Yes | `wrong_safe` | 0.00 | `multiple_correct_partial` |
+| Yes | `wrong_unsafe` | -0.25 | `multiple_correct_partial` |
+| Yes | `cross_track` | -0.25 | `multiple_correct_partial` |
+| **No** (agent missed multiplicity, picked a single-nodule bin) | `correct` (single-bin matches the multiple-rule sub-bin) | +0.50 | `multiple_wrong` |
+| **No** | `adjacent_safe` | +0.25 | `multiple_wrong` |
+| **No** | `adjacent_unsafe` | -0.15 | `multiple_wrong` |
+| **No** | `wrong_safe` | 0.00 | `multiple_wrong` |
+| **No** | `wrong_unsafe` | -0.30 | `multiple_wrong` |
+| **No** | `cross_track` | -0.30 | `multiple_wrong` |
 
-The required output schema field is `AgentResponse.dominant_nodule_recommendation` (see §1.3); it is required only when the agent's top-level `recommendation == multiple_nodule_dominant`.
+The "Yes" rows are roughly 0.5× the single-nodule scoring magnitudes (max ±0.25 vs ±0.50) because correctness on multiples requires two things; getting one right deserves partial but not full credit. The "No" rows are roughly half of single-nodule magnitudes again, reflecting that the agent missed multiplicity recognition entirely. Both are deliberately less harsh than the single-nodule scale at the unsafe extreme to avoid double-counting the recognition penalty.
+
+#### Case B: ground truth is a single-nodule bin, but agent hallucinated `multiple_nodule_dominant`
+
+The agent's `dominant_nodule_recommendation` is compared to the ground-truth bin using the same `_classify_against_truth` outcomes. The resulting outcome's standard `POINTS` value is multiplied by 0.5 (half credit, reflecting the recognition error).
+
+| Sub-bin outcome (agent's `dominant_nodule_recommendation` vs truth) | Half-weight points |
+|---|---|
+| `correct` | +0.50 |
+| `adjacent_safe` | +0.25 |
+| `adjacent_unsafe` | -0.125 |
+| `wrong_safe` | 0.00 |
+| `wrong_unsafe` | -0.25 |
+| `cross_track` | -0.25 |
+
+If the agent picked `multiple_nodule_dominant` but failed to provide `dominant_nodule_recommendation`, the response is `malformed` (the schema validator rejects it). In the unlikely event the validator is bypassed, the fallback outcome is `wrong_safe * 0.5 = 0.00`.
+
+#### Case C: ground truth is a single-nodule bin, agent also single-nodule
+
+Standard adjacency-track scoring per §3.1 — no multiple-nodule rules involved.
+
+The full table is implemented as two `dict[Outcome, float]` lookup tables in `radgym/scoring.py` (`partial_table` and `half_points_table`) and is the source of truth. Any future scoring change MUST update both this section and those tables together, and bump the `scoring_version` field on the leaderboard.
 
 ### 3.5 Reported metrics
 
@@ -237,7 +287,7 @@ The leaderboard reports for each submission:
 - **`cross_track_rate`** — % scored as `cross_track`. Surfaces a specific failure mode (agent picked the wrong follow-up type).
 - **`malformed_rate`** — % of malformed outputs (a robustness metric).
 
-A submission is **not** rankable if `malformed_rate > 10%` — the agent failed to follow the output schema reliably enough to be evaluated.
+A submission is **not** rankable if `malformed_rate > 5%` — the agent failed to follow the output schema reliably enough to be evaluated. (External review #4 flagged the original 10% threshold as wide enough to incentivize strategic refusal: an agent could output malformed JSON on its hardest 10% of cases — which would otherwise score `wrong_unsafe` (-0.50) — and gain ~5 composite points over an honest agent. 5% closes that gaming margin while preserving the "humility is okay on genuinely difficult cases" incentive that motivates the `malformed=0.00` value in the first place.)
 
 Per-bin confusion matrices are computed internally but are **not** returned to external submitters in v0.1 (see §4.2 for the label-leak rationale). Aggregate per-bin accuracy may be returned in v0.2 once submission rate-limiting is in place.
 
@@ -245,7 +295,13 @@ Per-bin confusion matrices are computed internally but are **not** returned to e
 
 With N=150, bootstrap 95% CIs are computed for the composite and shown next to point estimates. Submissions whose CI overlaps the rules-engine baseline are flagged as "not distinguishable from oracle" — useful information, not a penalty.
 
-**Determinism caveat**: `temperature=0` is not reproducible across providers (OpenAI fingerprint drift, Anthropic small-numerical variation, batched HF endpoints). v0.1 does not majority-vote; instead it records the model's `system_fingerprint` (where the provider supplies one) and acknowledges in the methodology that two runs of the same submission may produce composite scores differing within the bootstrap CI. v0.2 will add majority-of-3 sampling for closed-API submissions.
+**Determinism caveat**: `temperature=0` is not reproducible across providers (OpenAI fingerprint drift, Anthropic small-numerical variation, batched HF endpoints). v0.1 commitments:
+
+- Each submission records the provider's `system_fingerprint` (OpenAI) or equivalent (where available) at run time.
+- Submissions from closed APIs pin the exact model identifier including date (e.g., `gpt-4o-2024-11-20`, not `gpt-4o`).
+- A submission is re-run if and only if the maintainer suspects scoring infrastructure error (not for routine variance). Re-runs are visible in the submissions log with both runs' scores.
+- Two runs of the same submission may produce composite scores differing within the bootstrap CI; the leaderboard ranks on the most recent run. We do *not* claim deterministic reproducibility for closed APIs in v0.1.
+- v0.2 will add majority-of-3 sampling for closed-API submissions, which converts the variance from a ranking risk into a scoring noise floor.
 
 ## 4. Submission
 
