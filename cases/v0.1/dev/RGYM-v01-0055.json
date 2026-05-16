@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0055",
+    "presentation": "62 year old male with 35 pack year history presents with a single 5mm solid nodule.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5.0,
+      "multiplicity": "single",
+      "morphology": "smooth",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 62,
+      "smoking_history": "current",
+      "pack_years": 35.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for preoperative management. Patient previously declined LDCT screening."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0055",
+    "recommendation": "optional_ct_12mo",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0040",
+    "presentation": "57 year old male with no significant past medical history and a 20 pack year smoking history, having quit 8 years prior, presents with a single 4mm ground-glass nodule in the LLL.",
+    "nodule": {
+      "type": "sub_solid_ground_glass",
+      "size_mm": 4.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "lower_lobe",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 57,
+      "smoking_history": "former",
+      "pack_years": 20.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT lumbar spine obtained for pre-operative evaluation of lumbar degenerative disease. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0040",
+    "recommendation": "no_routine_followup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "low",
+    "source": "synthetic_maintainer_authored",
+    "notes": "Maintainer assigned low risk: 20-pack-year former smoker, quit 8 years prior — below Fleischner's quoted 30-pack-year heavy-smoker threshold for high-risk classification in patients with solid nodules (§'Tobacco and Other Inhaled Carcinogens'). Oracle's conservative heuristic flags any smoking history as high. Bin is risk-invariant per Table 1B (subsolid <6mm = no routine follow-up regardless of risk)."
+  }
+}

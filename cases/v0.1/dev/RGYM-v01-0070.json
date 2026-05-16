@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0070",
+    "presentation": "69 year old female with no significant past medical history presents with a single 5mm solid nodule in the LLL on abdominal CT.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "lower_lobe",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 69,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": true,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT abdomen/pelvis obtained for suspected nephrolithiasis. Family history of lung cancer in older sibling. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0070",
+    "recommendation": "optional_ct_12mo",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

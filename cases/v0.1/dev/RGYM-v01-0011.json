@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0011",
+    "presentation": "45 year old female with no significant past medical history presenting with multiple solid nodules on chest CT, all smaller than 6mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5.0,
+      "multiplicity": "multiple",
+      "morphology": "smooth",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 45,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Patient presenting post-MVC, no prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0011",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "no_routine_followup",
+    "maintainer_assigned_risk": "low",
+    "source": "fleischner_2017_table1_row:multiple_solid_lt6mm_low",
+    "notes": ""
+  }
+}

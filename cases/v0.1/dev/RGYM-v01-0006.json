@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0006",
+    "presentation": "76-year-old female with history of emphysema, a 60 pack year smoking history presenting with a 9mm solid nodule.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 9.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 76,
+      "smoking_history": "current",
+      "pack_years": 60.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": true,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Patient presented at a new facility for evaluation of a worsening chronic cough. No prior chest imaging available for comparison."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0006",
+    "recommendation": "consider_pet_or_biopsy",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "fleischner_2017_table1_row:single_solid_gt8mm_high",
+    "notes": ""
+  }
+}

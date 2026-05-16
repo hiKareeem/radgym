@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0012",
+    "presentation": "84 year old male with 40 pack year smoking history and general medical history remarkable for emphysema. Chest CT demonstrates multiple solid nodules, all less than 6mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 84,
+      "smoking_history": "current",
+      "pack_years": 40.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": true,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Patient presenting for worsening chronic cough, no remarkable nodules on prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0012",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "optional_ct_12mo",
+    "maintainer_assigned_risk": "high",
+    "source": "fleischner_2017_table1_row:multiple_solid_lt6mm_high",
+    "notes": ""
+  }
+}

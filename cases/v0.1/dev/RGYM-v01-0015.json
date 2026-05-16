@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0015",
+    "presentation": "58 year old male with 10 pack year smoking history, quit five years prior, presents with multiple solid nodules >8mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 9.8,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 9.2,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 58,
+      "smoking_history": "former",
+      "pack_years": 10.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest performed for chest pain, no prior imaging available for comparison"
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0015",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "low",
+    "source": "fleischner_2017_table1_row:multiple_solid_gt8mm_low",
+    "notes": "Maintainer assigned low risk: 10-pack-year former smoker, quit 5 years prior, no other risk factors — below Fleischner's quoted 30-pack-year heavy-smoker threshold for high-risk classification. Oracle's conservative heuristic flags this as high risk. For Table 1A Multiple/>8mm, both risk rows route to the same sub-bin (CT 3-6mo then 18-24mo), so the disagreement is informative but doesn't change the recommendation."
+  }
+}

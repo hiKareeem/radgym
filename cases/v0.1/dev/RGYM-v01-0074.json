@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0074",
+    "presentation": "74 year old male with history of emphysema in the setting of long-term wood-stove smoke exposure presents with a single 4mm solid nodule.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 4.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 74,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": true,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for evaluation of chronic cough in the setting of emphysema. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0074",
+    "recommendation": "optional_ct_12mo",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

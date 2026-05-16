@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0025",
+    "presentation": "54 year old male with no significant past medical history presents with a 14mm part-solid LUL and a 10mm ground-glass RUL nodules.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 14.0,
+      "multiplicity": "multiple",
+      "morphology": "smooth",
+      "location": "upper_lobe",
+      "additional_nodules": [
+        {
+          "type": "sub_solid_ground_glass",
+          "size_mm": 10.0,
+          "morphology": "lobulated",
+          "location": "upper_lobe"
+        }
+      ]
+    },
+    "patient": {
+      "age": 54,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": true,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Non contrast CT chest performed following MVC, no prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0025",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "subsolid_workup",
+    "maintainer_assigned_risk": "high",
+    "source": "fleischner_2017_figure:fig14",
+    "notes": "Baseline imaging finding from MacMahon 2017 Fig 14 (bilateral subsolids: dominant 14mm part-solid LUL, additional 10mm lobulated GGN RUL); figure's 'multifocal primary adenocarcinoma' interpretation dropped as outcome leakage. Deliberately mixed-type case: the oracle's _dominant_nodule() selects the larger part-solid over the smaller GGN by size. Patient context fabricated; maintainer-assigned high risk per FHx lung CA. As with case 0024, the part-solid is large enough that v0.2's solid-component-aware oracle may route the dominant to CONSIDER_PET_OR_BIOPSY; v0.1 sub-bin is SUBSOLID_WORKUP and a PET recommendation by the agent would score adjacent_safe."
+  }
+}

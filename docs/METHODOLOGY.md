@@ -160,17 +160,28 @@ This is not contamination-proof — no benchmark can be against a model that *ha
 
 Target distribution for v0.1 (subject to maintainer revision):
 
-| Bin | Target % | Rationale |
-|---|---|---|
-| `no_routine_followup` | 15% | Common but trivial — small floor |
-| `optional_ct_12mo` | 15% | Tests low-/high-risk distinction at <6 mm |
-| `ct_6_12mo_then_18_24mo_if_stable` | 15% | Mid-range, common bin |
-| `ct_3_6mo_then_18_24mo` | 20% | Most algorithm branches converge here |
-| `consider_pet_or_biopsy` | 15% | Tests recognition of higher-risk findings |
-| `subsolid_workup` | 15% | Tests sub-solid handling (covers GGN q2y/5y and part-solid annual/5y; v0.2 will split) |
-| `multiple_nodule_dominant` | 5% | Tests dominant-nodule rule (small for v0.1) |
+| Top-level `recommendation`         | Target N | Target % | Rationale                                                  |
+| ---------------------------------- | -------- | -------- | ---------------------------------------------------------- |
+| `no_routine_followup`              | 30       | 15%      | Common but trivial — small floor                           |
+| `optional_ct_12mo`                 | 30       | 15%      | Tests low-/high-risk distinction at <6 mm                  |
+| `ct_6_12mo_then_18_24mo_if_stable` | 30       | 15%      | Mid-range, common bin                                      |
+| `subsolid_workup`                  | 30       | 15%      | Tests sub-solid handling (covers GGN q2y/5y and part-solid annual/5y; v0.2 will split) |
+| `consider_pet_or_biopsy`           | 30       | 15%      | Tests recognition of higher-risk findings                  |
+| `multiple_nodule_dominant`         | 50       | 25%      | All multiple-nodule cases; sub-bin distribution below      |
+| **Total**                          | **200**  | **100%** |                                                            |
 
-This distribution is **uniform-ish across bins for benchmark resolution, not weighted by clinical prevalence.** Real-world incidental nodules are overwhelmingly <6mm — a prevalence-weighted benchmark would be ~70% `no_routine_followup` cases, which would (a) inflate exact_accuracy scores trivially, (b) provide little discrimination between agents on the harder bins, (c) hide failures on rare-but-critical cases. A `clinical_prevalence_weighted` secondary score may be added in v0.2 for those who want it; v0.1's headline composite is uniform-bin.
+**Note on `ct_3_6mo_then_18_24mo`:** This bin is unreachable as a top-level single-nodule recommendation per Fleischner 2017. Table 1A produces it only in multiple-row cells (multiple solid 6-8mm low, multiple solid 6-8mm high, multiple solid >8mm low, multiple solid >8mm high — 4 of 6 multiple-solid cells route here). Table 1B and the body text contain no single-nodule path producing this recommendation. The bin therefore lives exclusively as a `dominant_nodule_recommendation` value under `multiple_nodule_dominant`. This is intentional — it reflects how Fleischner's algorithm actually behaves, not a curation gap. Distribution targets within `multiple_nodule_dominant`:
+
+| Sub-bin (`dominant_nodule_recommendation`) | Target N | Rationale                                                                                                                                                                                              |
+| ------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ct_3_6mo_then_18_24mo`                    | 30       | Where most multiple-nodule branches converge (4 of 6 Table 1A multiple-solid cells)                                                                                                                    |
+| `subsolid_workup`                          | 10       | Multiple-subsolid cases (both Table 1B multiple cells route here)                                                                                                                                      |
+| `no_routine_followup`                      | 3        | Multiple solid <6mm low-risk (one Table 1A cell)                                                                                                                                                       |
+| `optional_ct_12mo`                         | 3        | Multiple solid <6mm high-risk (one Table 1A cell)                                                                                                                                                      |
+| `consider_pet_or_biopsy`                   | 4        | NOT produced by the oracle for any v0.1 case; reachable only when an agent recognizes a clinically-worrisome dominant nodule (e.g., large part-solid with concerning features — the v0.2 PET-routing case per §3.3) |
+| **Sub-bin total**                          | **50**   |                                                                                                                                                                                                        |
+
+This distribution is **uniform-ish across top-level bins for benchmark resolution, not weighted by clinical prevalence.** Real-world incidental nodules are overwhelmingly <6mm — a prevalence-weighted benchmark would be ~70% `no_routine_followup` cases, which would (a) inflate exact_accuracy scores trivially, (b) provide little discrimination between agents on the harder bins, (c) hide failures on rare-but-critical cases. A `clinical_prevalence_weighted` secondary score may be added in v0.2 for those who want it; v0.1's headline composite is uniform-bin. `multiple_nodule_dominant` is the one bin allocated more than 15% — this reflects that it absorbs the entire Fleischner Table 1A multiple-row branch space, which alone produces 6 algorithmically distinct sub-bin × risk combinations. Scoring (§3.4) exercises top-level and sub-bin separately, so sub-bin coverage genuinely matters for benchmark sensitivity.
 
 Within each bin we deliberately over-sample bin boundaries (nodules at exactly 6 mm and 8 mm) to discriminate agents that approximate Fleischner from agents that truly apply it.
 

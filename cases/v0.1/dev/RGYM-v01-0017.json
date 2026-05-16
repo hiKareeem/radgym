@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0017",
+    "presentation": "83 year old female with no significant past medical history presents with multiple subsolid nodules measuring less than 6mm.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 5.2,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "sub_solid_part_solid",
+          "size_mm": 4.8,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 83,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "Patient presents for chest pain lasting 2 weeks, no prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0017",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "subsolid_workup",
+    "maintainer_assigned_risk": "low",
+    "source": "fleischner_2017_table1_row:multiple_subsolid_lt6mm",
+    "notes": ""
+  }
+}
