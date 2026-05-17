@@ -30,6 +30,9 @@ cases/v*/test/
 # HF Space deploy artifacts
 .hf_space/
 
+# Baseline results (per-run logs; reproducible from baseline configs)
+results/
+
 # IDE
 .vscode/
 .idea/

@@ -2,6 +2,27 @@
 
 Build-in-public progress notes. Newest entries at top.
 
+## 2026-05-16 — Baseline runner shipped; oracle scores 100/127
+
+Built `radgym/baselines/` (runner, oracle wrapper, preset configs) + `scripts/run_baseline.py` CLI. Key design decisions:
+
+- **Resumable JSONL log** — per-case append-only, so a crashed run picks up where it left off without re-charging completed cases.
+- **Robust JSON extraction** — 4 fallback strategies (strict → fenced markdown → first balanced braces → trailing-comma repair) with the strategy recorded per case. Agents in the wild return JSON in every shape; the strict-only parser would have a 30%+ malformed rate from a frontier model that's actually getting the answer right.
+- **`system_fingerprint` capture** per METHODOLOGY §3.6 commitment.
+- **Cost preview via dry-run** — `--dry-run` shows projected cost before any API call.
+- **Skip-missing-keys** — partial-baseline runs are fine; the leaderboard accepts incremental baseline additions.
+- **External review #9 closed** — `oracle_baseline.py` wraps `OracleResult` into a valid `AgentResponse` so the rules engine ships as a first-class leaderboard entry. The wrapper distinguishes `predict_unblinded` (heuristic risk — what the leaderboard runs) from `predict_blinded_to_truth` (uses maintainer's risk — diagnostic only, never shipped).
+
+First oracle-baseline run on the dev set (127 cases):
+
+  composite: 100.00 / exact: 100.0% / malformed: 0.0% / cost: $0.00
+
+Perfect score means every maintainer-curated label matches the algorithm exactly. Curation is internally consistent.
+
+**Curation catch**: case RGYM-v01-0094 had `known_primary_cancer=True` (62yo female with uterine cancer, 8mm nodule on staging CT). Schema validator rejected it correctly — Fleischner 2017 explicitly excludes these patients. Case quarantined to `docs/quarantine/` pending Kareem's call on delete-vs-rewrite. Pattern to watch in remaining curation: any case framed around staging in a known cancer is out of scope; CT 3-month follow-up is driven by the primary's protocol, not Fleischner.
+
+Tests: 35 → 57 (added 22 baseline tests covering JSON-extraction edge cases, schema validation pathways, oracle baseline integration, and resumability).
+
 ## 2026-05-15 — Second external review triaged; doc/code consistency pass
 
 Second external-agent review (different model). Less impressive than the first — caught ~5 real items and 3 misreads (they only saw the 3 design files, not the code, so flagged `dominant_nodule_recommendation`, `GroundTruth`, and `additional_nodules` validation as "missing" when all three exist in `schemas.py`). Real fixes shipped this commit:

@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0121",
+    "presentation": "81 year old male with no significant past medical history presents with a single 25mm ground-glass nodule.",
+    "nodule": {
+      "type": "sub_solid_ground_glass",
+      "size_mm": 25.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 81,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest/abdomen/pelvis obtained for preoperative staging. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0121",
+    "recommendation": "subsolid_workup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "low",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0109",
+    "presentation": "63 year old female with 30 pack year smoking history presents with a single 8mm solid nodule.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 8.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 63,
+      "smoking_history": "current",
+      "pack_years": 30.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest/abdomen/pelvis obtained for preoperative staging. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0109",
+    "recommendation": "ct_6_12mo_then_18_24mo_if_stable",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

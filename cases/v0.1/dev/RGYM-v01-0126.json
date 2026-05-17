@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0126",
+    "presentation": "68 year old female with family history of primary lung cancer presents with a single 10mm part-solid nodule.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 10.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 68,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": true,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained preoperatively. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0126",
+    "recommendation": "subsolid_workup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}
