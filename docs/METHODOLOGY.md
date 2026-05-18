@@ -375,19 +375,56 @@ Total maintainer cost projected at <$50/month at the expected v0.1 submission ra
 
 ## 5. Reference baselines
 
-The maintainer runs these on the hidden test set before public launch:
+> **Canonical implementation:** `radgym/baselines/presets.py` — `PRESET_BASELINES` (snapshot) and `CURRENT_FRONTIER_BASELINES` (refresh-on-flagship), unified at `ALL_BASELINES`. The launch leaderboard runs both tiers and displays them as separate tabs.
 
-| Baseline | Notes |
-|---|---|
-| **Rules engine** | 20-line Python applying Fleischner 2017 literally. Should score near 100. The oracle's correctness is the floor of the benchmark. |
-| **GPT-4o** (`gpt-4o-2024-11-20`) | Default modern API reference. |
-| **Claude Sonnet 4** (`claude-sonnet-4-20250514`) | The other default. |
-| **Gemini 2.5 Pro** | Long-context reference. |
-| **Llama-3.3-70B-Instruct** | Open generalist reference. |
-| **MedGemma-27B-it** | Open medical SLM reference. |
-| **GPT-3.5-turbo** | Deliberate floor so the leaderboard has visible spread. |
+The maintainer runs these baselines on the hidden test set before public launch. They serve two distinct purposes, captured by a two-tier system:
 
-All baselines use the same default system prompt (a clinically-neutral framing) and same temperature=0 settings. A second pass of each baseline with a "chain-of-thought" prompt is also published as a separate entry, demonstrating that prompt engineering moves the score (the explicit lesson for the indie-hacker audience).
+### 5.1 Snapshot baselines (frozen at launch)
+
+**Purpose**: reproducibility anchors. Date-pinned model IDs where available. Once a submission has scored against these, the scores never change. Paper-citable.
+
+| Baseline | Model identifier | Notes |
+|---|---|---|
+| **Rules engine** | `radgym.baselines.oracle_baseline` | Encodes Fleischner 2017 Table 1A/1B literally. Should score near 100. The benchmark floor. |
+| **GPT-4o** | `openai/gpt-4o-2024-11-20` | OpenAI Nov-2024 frontier reference. |
+| **Claude Sonnet 4** | `anthropic/claude-sonnet-4-20250514` | Anthropic May-2025 reference. |
+| **Gemini 2.5 Pro** | `gemini/gemini-2.5-pro` | Google reasoning model. `reasoning_effort=low` to cap hidden thinking budget. |
+| **Llama-3.3-70B-Instruct** | `openrouter/meta-llama/llama-3.3-70b-instruct` | Open generalist reference. |
+| **GPT-3.5-turbo** | `openai/gpt-3.5-turbo` | Deliberate floor — ensures the leaderboard has visible spread. |
+
+MedGemma-27B was originally planned as a sixth open-weight baseline but is deferred to v0.2 because OpenRouter does not host it; v0.2 will set up a local Ollama or vLLM endpoint to enable it.
+
+### 5.2 Current frontier baselines (refresh-on-flagship)
+
+**Purpose**: "what is SOTA today" view. Non-date-pinned aliases that follow whatever the provider currently calls their flagship. Refreshed when a new flagship ships: the previous current-frontier rolls into §5.1 with a resolved date stamp, the new flagship takes its place. The current registry tag is `CURRENT_FRONTIER_REGISTRY_TAG` in `presets.py`.
+
+| Baseline | Model identifier | Notes |
+|---|---|---|
+| **GPT-5.5** | `openai/gpt-5.5` | OpenAI current frontier as of 2026-05-18. |
+| **GPT-5.5 Pro** | `openai/gpt-5.5-pro` | OpenAI pro tier. |
+| **Claude Opus 4.7** | `anthropic/claude-opus-4-7` | Anthropic current frontier (Opus tier). |
+| **Claude Sonnet 4.6** | `anthropic/claude-sonnet-4-6` | Anthropic current frontier (Sonnet tier). |
+| **Gemini 3.1 Pro preview** | `gemini/gemini-3.1-pro-preview` | Google current frontier (preview). Reasoning model — same `reasoning_effort=low` cap as Gemini 2.5 Pro. |
+| **DeepSeek V4 Pro** | `openrouter/deepseek/deepseek-v4-pro` | DeepSeek current frontier (open-weight reasoning), via OpenRouter. The strongest non-Western frontier reference. |
+| **Llama 4 Maverick** | `openrouter/meta-llama/llama-4-maverick` | Meta current frontier (open-weight), via OpenRouter. Successor to the Llama 3.3 snapshot baseline. |
+
+### 5.3 Settings and disclosure
+
+All baselines use the same default system prompt (clinically-neutral framing). Decoding parameters differ by provider mandate:
+
+| Tier | Baselines | Temperature | Notes |
+|---|---|---|---|
+| Snapshot (§5.1) | gpt-4o, claude-sonnet-4, gemini-2.5-pro, llama-3.3-70b, gpt-3.5-turbo | **0.0** | Standard low-variance setting. |
+| Current frontier (§5.2) | gpt-5.5, gpt-5.5-pro, claude-opus-4-7 | **1.0 (provider-mandated)** | Reasoning models reject `temperature=0` with `BadRequestError` / "temperature is deprecated for this model". The provider's stance is that internal reasoning replaces the temperature knob for determinism. |
+| Current frontier (§5.2) | claude-sonnet-4-6 | **0.0** | Still accepts temperature=0 — kept consistent with snapshot tier. |
+
+**Honest framing on cross-tier comparison.** A direct composite comparison between a temp=0 snapshot baseline and a temp=1 current-frontier baseline includes whatever within-run variance the temp=1 model has. METHODOLOGY §3.6 already acknowledged that "temperature=0 isn't actually deterministic across providers" — the temp=1 case is the same problem at a higher amplitude. v0.1 surfaces the actual per-baseline temperature on the leaderboard and reports composite ± bootstrap CI. Submissions that want to claim a particular provider/temperature combination is "deterministic enough" are welcome to do so on their submission card.
+
+Reasoning-model baselines (Gemini 2.5, GPT-5.5, Claude Opus 4.7) also receive `reasoning_effort=low` or equivalent provider-specific knobs (via `BaselineConfig.extra_params`) to keep visible-output budgets adequate for the JSON response. Without this cap, ~20% of Gemini cases truncated their visible output to "" with the entire `max_tokens=2048` budget consumed by hidden reasoning.
+
+**Cost transparency**: the launch leaderboard shows the per-case cost for every seeded baseline (provider × token usage × current API price). External submissions can opt in to cost display; default is hidden. The cost column is *not* part of the ranking — it's diagnostic information for submitters comparing price/performance tradeoffs.
+
+A second pass of each baseline with a "chain-of-thought" prompt is also published as a separate entry, demonstrating that prompt engineering moves the score (the explicit lesson for the indie-hacker audience).
 
 ## 6. Infrastructure
 

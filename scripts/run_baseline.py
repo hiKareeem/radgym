@@ -38,6 +38,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from radgym.baselines import oracle_baseline  # noqa: E402
 from radgym.baselines.presets import (  # noqa: E402
     ALL_BASELINE_NAMES,
+    ALL_BASELINES,
     PRESET_BASELINES,
 )
 from radgym.baselines.runner import (  # noqa: E402
@@ -160,7 +161,7 @@ def main() -> int:
             if name == "oracle":
                 print(f"  {oracle_baseline.BASELINE_NAME:35s}  $0.0000 (no LLM)")
                 continue
-            cfg = PRESET_BASELINES[name]
+            cfg = ALL_BASELINES[name]
             est = _estimate_cost(len(records), cfg)
             key_ok = "✓" if _check_api_key(cfg) else f"✗ (missing {cfg.api_key_env})"
             print(f"  {cfg.name:40s}  est {est:>10s}  key {key_ok}")
@@ -176,7 +177,7 @@ def main() -> int:
                     records, output_jsonl=jsonl, verbose=not args.quiet
                 )
             else:
-                cfg = PRESET_BASELINES[name]
+                cfg = ALL_BASELINES[name]
                 if not _check_api_key(cfg):
                     msg = (
                         f"  baseline {cfg.name}: env var {cfg.api_key_env} not set"

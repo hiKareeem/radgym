@@ -97,6 +97,12 @@ class BaselineConfig:
     max_tokens: int = 800
     api_key_env: str | None = None             # env var name; None = LiteLLM default lookup
     notes: str = ""
+    # Provider-specific extras passed straight through to litellm.completion().
+    # Examples:
+    #   {"thinking": {"type": "enabled", "budget_tokens": 1024}}  # Anthropic extended thinking
+    #   {"reasoning_effort": "low"}                                # Gemini 2.5 reasoning budget
+    # Default factory because frozen dataclass + mutable default is forbidden.
+    extra_params: dict[str, Any] = field(default_factory=dict)
 
     def to_metadata(self) -> dict[str, str]:
         return {
@@ -295,25 +301,48 @@ def _call_llm(
         wait_exponential,
     )
 
+    # Drop unsupported params silently rather than 400-ing out. Providers
+    # increasingly reject specific params per-model (gpt-5.5-pro: top_p
+    # not supported; gpt-5.5 / opus-4-7: temperature != 1; others
+    # likely to follow). With drop_params=True, LiteLLM logs the drop
+    # and proceeds with the remaining supported params. This is the
+    # robust way to keep the runner working as providers tighten APIs.
+    litellm.drop_params = True
+
     @retry(
         stop=stop_after_attempt(max_retries),
         wait=wait_exponential(multiplier=2, min=2, max=30),
         reraise=True,
     )
     def _one_call() -> Any:
-        return litellm.completion(
-            model=cfg.model_identifier,
-            messages=[
+        # Build kwargs explicitly so we can omit defaults that some
+        # providers reject as deprecated/conflicting. As of 2026-05:
+        #   - Anthropic Opus 4.7 rejects top_p outright.
+        #   - Anthropic Sonnet 4.6 rejects (temperature AND top_p) together.
+        #   - OpenAI gpt-5.5-pro rejects top_p.
+        # litellm.drop_params=True does NOT catch these because LiteLLM's
+        # allow-list is conservative. The robust play is to only forward
+        # top_p when it's a non-default value (i.e. someone actually wants
+        # nucleus sampling). Same conservatism for temperature on the
+        # reasoning models (handled per-baseline in presets.py).
+        call_kwargs: dict[str, Any] = {
+            "model": cfg.model_identifier,
+            "messages": [
                 {"role": "system", "content": cfg.system_prompt},
                 {
                     "role": "user",
                     "content": cfg.user_prompt_template.format(case_json=case_json),
                 },
             ],
-            temperature=cfg.temperature,
-            top_p=cfg.top_p,
-            max_tokens=cfg.max_tokens,
-        )
+            "temperature": cfg.temperature,
+            "max_tokens": cfg.max_tokens,
+            **cfg.extra_params,
+        }
+        # Only send top_p if the caller deliberately set something other
+        # than the no-op default of 1.0.
+        if cfg.top_p != 1.0:
+            call_kwargs["top_p"] = cfg.top_p
+        return litellm.completion(**call_kwargs)
 
     t0 = time.perf_counter()
     response = _one_call()
