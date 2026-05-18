@@ -1,0 +1,47 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0196",
+    "presentation": "84 year old male with history of empysema and occupation asbestos exposure presents with multiple subsolid nodules including: 22mm spiculated, part-solid, 12mm ground-glass and 6mm ground glass nodules.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 22.0,
+      "multiplicity": "multiple",
+      "morphology": "spiculated",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "sub_solid_ground_glass",
+          "size_mm": 12.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "sub_solid_ground_glass",
+          "size_mm": 6.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 84,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": true,
+      "family_history_lung_ca": false,
+      "emphysema": true,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for baseline staging of occupational asbestos exposure. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0196",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "subsolid_workup",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

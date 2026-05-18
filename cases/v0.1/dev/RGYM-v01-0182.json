@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0182",
+    "presentation": "52 year old male with family history of primary lung cancer and 15 pack year smoking history, quitting 10 years prior, presents with multiple solid nodules measuring 14 and 9mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 14.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 9.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 52,
+      "smoking_history": "former",
+      "pack_years": 15.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": true,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained on patient request. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0182",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

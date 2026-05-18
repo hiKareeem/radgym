@@ -1,0 +1,47 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0185",
+    "presentation": "76 year old female with history of asbestos exposure and a 50 pack year smoking history presents with mutliple nodules measuring 25, 15 and 8mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 25.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 15.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "solid",
+          "size_mm": 8.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 76,
+      "smoking_history": "current",
+      "pack_years": 50.0,
+      "asbestos_exposure": true,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for evaluation of cough and weight loss. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0185",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

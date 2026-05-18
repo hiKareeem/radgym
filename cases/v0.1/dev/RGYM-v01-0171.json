@@ -1,0 +1,53 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0171",
+    "presentation": "67 year old female with history of idiopathic pulmonary fibrosis presents with multiple nodules measuring 8, 4, 4 and 3mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 8.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "solid",
+          "size_mm": 3.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 67,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": true,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for initial staging of known IPF. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0171",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

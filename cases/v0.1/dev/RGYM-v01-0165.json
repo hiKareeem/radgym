@@ -1,0 +1,47 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0165",
+    "presentation": "54 year old male with no significant past medical history presents with 8mm, 4mm and 4mm solid nodules.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 8.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 54,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CTA PE protocol obtained for dyspnea. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0165",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "low",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

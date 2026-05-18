@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0132",
+    "presentation": "78 year old male with empysema and a 50 pack year smoking history presents with a single 20mm spiculated, part-solid nodule.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 20.0,
+      "multiplicity": "single",
+      "morphology": "spiculated",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 78,
+      "smoking_history": "current",
+      "pack_years": 50.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": true,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for the evaluation of dyspnea. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0132",
+    "recommendation": "subsolid_workup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

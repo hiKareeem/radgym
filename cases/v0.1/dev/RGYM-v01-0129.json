@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0129",
+    "presentation": "67 year old with 50 pack year smoking history presents with a single 12mm part-solid, lobulated nodule.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 12.0,
+      "multiplicity": "single",
+      "morphology": "lobulated",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 67,
+      "smoking_history": "current",
+      "pack_years": 50.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for the evaluation of dyspnea. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0129",
+    "recommendation": "subsolid_workup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0173",
+    "presentation": "50 year old female with no significant past medical history presents with multiple nodules measuring 10 and 8mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 10.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 8.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 50,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest/abdomen/pelvis obtained following MVC. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0173",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "low",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

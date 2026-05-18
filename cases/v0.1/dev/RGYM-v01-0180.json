@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0180",
+    "presentation": "61 year old male with history of occupational asbestos exposure and 20 pack year smoking history, quit 10 years prior, presents with multiple nodules measuring 10 and 8mm",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 10.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 8.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 61,
+      "smoking_history": "former",
+      "pack_years": 20.0,
+      "asbestos_exposure": true,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for staging of occupational asbsetos exposure. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0180",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "ct_3_6mo_then_18_24mo",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0191",
+    "presentation": "63 year old female with 30 pack year history, quit 8 years prior, presents with multiple sub-solid nodules including a 10mm part-solid and 7mm ground-glass nodules.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 10.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "sub_solid_ground_glass",
+          "size_mm": 7.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 63,
+      "smoking_history": "former",
+      "pack_years": 30.0,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for evaluation of dyspnea. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0191",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "subsolid_workup",
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

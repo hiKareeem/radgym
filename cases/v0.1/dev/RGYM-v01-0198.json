@@ -1,0 +1,47 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0198",
+    "presentation": "56 year old male with no significant past medical history presents with multiple solid nodules measuring 5, 4 and 3mm.",
+    "nodule": {
+      "type": "solid",
+      "size_mm": 5.0,
+      "multiplicity": "multiple",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": [
+        {
+          "type": "solid",
+          "size_mm": 4.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        },
+        {
+          "type": "solid",
+          "size_mm": 3.0,
+          "morphology": "unspecified",
+          "location": "unspecified"
+        }
+      ]
+    },
+    "patient": {
+      "age": 56,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": false,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest/abdomen/pelvis obtained following MVC. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0198",
+    "recommendation": "multiple_nodule_dominant",
+    "dominant_nodule_recommendation": "no_routine_followup",
+    "maintainer_assigned_risk": "low",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}

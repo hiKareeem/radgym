@@ -1,0 +1,34 @@
+{
+  "case": {
+    "case_id": "RGYM-v01-0130",
+    "presentation": "46 year old male with history of asbestos exposure presents with a single 15mm part-solid nodule.",
+    "nodule": {
+      "type": "sub_solid_part_solid",
+      "size_mm": 15.0,
+      "multiplicity": "single",
+      "morphology": "unspecified",
+      "location": "unspecified",
+      "additional_nodules": []
+    },
+    "patient": {
+      "age": 46,
+      "smoking_history": "never",
+      "pack_years": null,
+      "asbestos_exposure": true,
+      "family_history_lung_ca": false,
+      "emphysema": false,
+      "pulmonary_fibrosis": false,
+      "known_primary_cancer": false,
+      "immunocompromised": false
+    },
+    "context": "CT chest obtained for initial evaluation of occupational asbestos exposure. No prior imaging."
+  },
+  "ground_truth": {
+    "case_id": "RGYM-v01-0130",
+    "recommendation": "subsolid_workup",
+    "dominant_nodule_recommendation": null,
+    "maintainer_assigned_risk": "high",
+    "source": "synthetic_maintainer_authored",
+    "notes": ""
+  }
+}
