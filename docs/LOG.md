@@ -2,6 +2,24 @@
 
 Build-in-public progress notes. Newest entries at top.
 
+## 2026-05-17 — Stratified dev/test split (50/150)
+
+200 curated cases split into:
+
+- `cases/v0.1/dev/` — 50 public cases (committed). Submitters can debug prompts against full per-case ground truth here.
+- `cases/v0.1/test/` — 150 hidden cases (gitignored, never published). The scored split.
+
+Both halves mirror the overall bin distribution and the ~45/55 low/high risk balance:
+
+- DEV (50):  multiples 13 (26%), subsolid 8, ct_6_12mo 8, optional_ct 7, no_routine 7, consider_pet 7, consider_pet 7
+- TEST (150): multiples 37 (24.7%), no_routine 23, optional_ct 23, consider_pet 23, ct_6_12mo 22, subsolid 22
+
+Oracle round-trips 100/100 on both splits — curation is internally consistent end-to-end.
+
+Stratification: `(top_level_recommendation, maintainer_assigned_risk)` strata, largest-remainder method for rounding gap allocation, seeded RNG (`seed=20260514` — date we hit 200) so the split is reproducible. Tool: `scripts/stratified_split.py`.
+
+Next: run the 6 LLM baselines on the test split (gpt-4o, claude-sonnet-4, gemini-2.5-pro, llama-3.3-70b, medgemma-27b-it, gpt-3.5-turbo). API keys ready.
+
 ## 2026-05-16 — Baseline runner shipped; oracle scores 100/127
 
 Built `radgym/baselines/` (runner, oracle wrapper, preset configs) + `scripts/run_baseline.py` CLI. Key design decisions:
