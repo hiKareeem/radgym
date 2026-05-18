@@ -115,6 +115,7 @@ Fleischner-flagged nodule costs more than over-following it. The
 with `Malformed` > 5% are not rankable.
 
 [GitHub: hiKareeem/radgym](https://github.com/hiKareeem/radgym) ·
+[Submitter docs](https://github.com/hiKareeem/radgym/blob/main/docs/SUBMISSION.md) ·
 Maintainer: [@hiKareeem](https://github.com/hiKareeem) (radiology background; eval-design history with SpireBench)
 """
 

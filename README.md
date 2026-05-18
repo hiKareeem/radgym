@@ -33,7 +33,7 @@ This is the gap RadGym fills.
 
 ## Submitting
 
-v0.1 submissions are **prompt + model identifier** — submit a system prompt and a model name (e.g. `gpt-4o-2024-11-20`, `claude-sonnet-4`, `medgemma-27b-it`), and RadGym runs the eval on the hidden test set. Bring-your-own API key supported. Full submission docs: see `docs/SUBMISSION.md` (coming with v0.1 launch).
+v0.1 submissions are **prompt + model identifier** — submit a system prompt and a model name (e.g. `gpt-4o-2024-11-20`, `claude-sonnet-4`, `medgemma-27b-it`), and RadGym runs the eval on the hidden test set. Bring-your-own API key supported. **Full submission docs: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)** — covers schema, provider gotchas (temperature/top_p/reasoning-token budget), anti-abuse limits, and a dev-vs-test feedback policy.
 
 v0.2 will add Dockerized agent submissions for fine-tuned and custom-agent entries.
 
