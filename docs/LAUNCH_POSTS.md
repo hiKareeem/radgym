@@ -1,6 +1,6 @@
 # RadGym v0.1 — Launch Posts
 
-**Status:** Draft, awaiting maintainer redline. Final numbers in brackets pending test-split completion of gpt-5.5, gemini-3.1-pro, llama-4-maverick, deepseek-v4-pro.
+**Status:** Draft, awaiting maintainer redline + κ data + HF Space URL substitution. Numbers below reflect the **final 12-baseline test split** (150 cases, all baselines complete).
 
 Three audiences, three posts, one consistent voice. Read all three before sending any — they cross-reference.
 
@@ -14,7 +14,7 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 >
 > Open agentic benchmark for radiology workflow reasoning. v0.1 track: Fleischner Society 2017 pulmonary nodule follow-up.
 >
-> 150 hidden test cases. 9 baselines seeded. The headline: every frontier model misses ≥27 composite points vs a 20-line rules engine.
+> 150 hidden test cases. 12 baselines seeded. The headline: every frontier model misses ≥13 composite points vs a 20-line rules engine. Best frontier model is gpt-5.5 at 86.67/100.
 >
 > 🔗 leaderboard: [HF Space URL]
 > 🔗 repo: github.com/hiKareeem/radgym
@@ -34,47 +34,52 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 >
 > Imaging tracks come in v1.0. Lung-RADS, Fleischner incidental-findings white papers in v0.3.
 
-> **(4/12)** The leaderboard (test split, completed baselines):
+> **(4/12)** Final leaderboard, test split, 12 baselines on 150 cases:
 >
-> 🥇 oracle_rules_engine    100.00  (the floor)
-> 🥈 gpt-5.5 [TBD ~88]
-> 🥉 gemini-3.1-pro [TBD ~83]
-> ▫️ gemini-2.5-pro     73.47
-> ▫️ claude-sonnet-4-6  67.00
-> ▫️ gpt-4o             58.57
-> ▫️ claude-sonnet-4    53.73
-> ▫️ llama-3.3-70b      48.10
-> ✗  gpt-3.5-turbo      -0.83 (>5% malformed → not rankable)
+> 🥇 oracle_rules_engine     100.00  $0       (the floor)
+> 🥈 gpt-5.5                  86.67  $0.011/case
+> 🥉 gemini-3.1-pro-preview   83.33  $0.006/case
+> ▫️ gemini-2.5-pro           73.47  $0.010
+> ▫️ deepseek-v4-pro          67.87  free (OpenRouter)
+> ▫️ claude-sonnet-4-6        67.00  $0.0045
+> ▫️ claude-opus-4-7          62.87  $0.0080  ← still loses to Sonnet
+> ▫️ gpt-4o                   58.57  $0.0022
+> ▫️ claude-sonnet-4          53.73  $0.0034
+> ▫️ llama-3.3-70b            48.10  free
+> ▫️ llama-4-maverick         37.87  free     ← regression
+> ✗  gpt-3.5-turbo            -0.83  $0.0004  (24.7% malformed → not rankable)
 
-> **(5/12)** Three things that surprised me:
+> **(5/12)** Across all 9 dev baselines × 50 cases (450 model-cases), **multi-nodule recognition was the single largest error class — 81/450 errors, ~18%**.
 >
-> First: Claude Opus 4.7 underperforms Claude Sonnet 4.6 by ~15 composite points. *Within the same provider's lineup.* Diagnosis: Opus over-reasons about the dominant nodule and misses the multiple-vs-single recognition rule. 7 of 50 dev cases lost this way.
+> Multiple-nodule cases use a separate row of Fleischner Table 1A/1B than single-nodule cases. Models that reason "deeply" about the dominant nodule often miss the case-shape rule and apply single-nodule logic. The error compounds at the top of the leaderboard, not the bottom.
 
-> **(6/12)** Second: Llama 4 Maverick scores 26.40 on dev — *worse* than gpt-3.5-turbo (the deliberate "floor" baseline).
+> **(6/12)** Three findings worth digging into:
 >
-> Llama 3.3 70b scored 48.10. The Llama-4 training regressed on this specific class of structured medical reasoning. Worth a separate writeup.
->
-> Open weights haven't caught up to closed frontier on clinical guideline application yet.
+> First — Claude Opus 4.7 underperforms Claude Sonnet 4.6 by 16 composite points on dev, 4 on test. *Within the same provider's lineup.* Smaller, more instruction-tuned siblings beat the reasoning-heavy flagships on structured guideline application.
 
-> **(7/12)** Third: gpt-5.5-pro is 30× the cost of gpt-5.5 for +2 composite points.
+> **(7/12)** Second — Llama 4 Maverick scores 37.87 on test. Llama 3.3-70b scored 48.10. **The Llama-4 training regressed by 10 composite points** on this specific class of structured medical reasoning.
+>
+> Open weights haven't caught up to closed frontier on clinical guideline tasks. Worth a separate writeup.
+
+> **(8/12)** Third — gpt-5.5-pro costs 13× gpt-5.5 ($8.15 vs $0.63 for dev) for +2 composite points.
 >
 > Cost column is on the leaderboard for exactly this reason. The "premium tier" of frontier models isn't always worth it on structured-output tasks.
 >
-> Tracker: total spent seeding 9 baselines on dev+test = ~$16. Real but trivial.
+> Total spent seeding 12 baselines on dev+test: ~$18. Real but trivial.
 
-> **(8/12)** The scoring is the interesting part.
+> **(9/12)** The scoring is the interesting part.
 >
 > Adjacency tracks: solid track (5 bins) and sub-solid track (3 bins). Cross-track recommendations score -0.50 (same as under-following by ≥2). Picking the wrong *kind* of follow-up is a different error than picking the wrong interval.
 >
 > Multiple-nodule cases get their own decision table.
 
-> **(9/12)** Submissions open today.
+> **(10/12)** Submissions open today.
 >
 > Submit: model_identifier (LiteLLM-speak: openai/, anthropic/, gemini/, openrouter/) + system_prompt + user_prompt_template. Bring your own API key or use the free per-user quota.
 >
 > Dev split has full per-case feedback. Test split returns aggregates only (prevents label probing).
 
-> **(10/12)** What I learned wiring up 9 baselines that I wish someone had told me:
+> **(11/12)** What I learned wiring up 12 baselines that I wish someone had told me:
 >
 > - Reasoning models burn 2000–50000 hidden tokens per case
 > - gpt-5.5 + opus-4.7 reject temperature=0
@@ -84,17 +89,13 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 >
 > Full quirks list in docs/SUBMISSION.md.
 
-> **(11/12)** v0.1 is a small narrow benchmark on purpose. Each future version widens the scope:
+> **(12/12)** v0.1 is a small narrow benchmark on purpose. Each future version widens the scope:
 >
 > - v0.2: rationale grading (RadFact), majority-of-3 sampling, sub-solid bin split, MedGemma re-enabled
 > - v0.3: Lung-RADS, ACR incidental-findings white papers
 > - v1.0: imaging tracks (DICOM in, structured report out)
-
-> **(12/12)** Why I built this:
 >
-> 3 years radiology residency before I left for AI. Eval design heritage from SpireBench. The medical-AI benchmark space had a gap at the workflow-agentic layer and I happened to have the unusual combo of "knows what a radiologist actually does + knows how to ship an agent harness."
->
-> Submissions welcome. Bugs welcome. Tear it apart.
+> Why I built this: 3 years radiology residency before I left for AI. Eval-design heritage from SpireBench. Submissions welcome. Tear it apart.
 >
 > 🔗 leaderboard: [HF Space URL]
 > 🔗 repo: github.com/hiKareeem/radgym
@@ -119,15 +120,17 @@ https://huggingface.co/spaces/hiKareeem/radgym [or wherever it lands]
 
 > RadGym is an open benchmark that scores LLM agents on radiology workflow reasoning — specifically, applying Fleischner Society 2017 guidelines for incidental pulmonary nodule follow-up — rather than the single-image classification that dominates existing radiology-AI benchmarks (CheXbench, ReXrank, etc.).
 >
-> The v0.1 track is deliberately narrow: structured text in, structured recommendation out, 200 maintainer-curated cases (50 public dev + 150 hidden test), asymmetric scoring where under-following a Fleischner-flagged nodule costs more than over-following it. Frontier models cluster 53–89 composite on a 100-point scale held by a 20-line rules engine.
+> The v0.1 track is deliberately narrow: structured text in, structured recommendation out, 200 maintainer-curated cases (50 public dev + 150 hidden test), asymmetric scoring where under-following a Fleischner-flagged nodule costs more than over-following it. Across 12 seeded baselines on the 150-case test split, frontier models cluster 53–87 composite on a 100-point scale held by a 20-line rules engine.
 >
-> Three findings I didn't expect when I started:
+> Four findings I didn't expect when I started:
 >
-> 1. Claude Opus 4.7 scores ~15 composite points lower than Claude Sonnet 4.6 on this benchmark — within Anthropic's own lineup. Diagnosis: Opus over-reasons about the dominant nodule and misses the case-shape recognition rule that multiple-nodule cases use a separate row of Table 1A/1B than single-nodule cases. Smaller, more instruction-tuned models beat their reasoning-heavy siblings on structured guideline application.
+> 1. Across 9 dev baselines × 50 cases (450 model-cases), multi-nodule recognition was the single largest error class — 81/450, ~18% of all errors. Fleischner Table 1A/1B has a separate row for multiple-nodule cases; models that reason "deeply" about the dominant nodule often miss the case-shape rule and apply single-nodule logic. The error is concentrated at the top of the leaderboard, not the bottom.
 >
-> 2. Llama 4 Maverick scores 26 composite — *worse than gpt-3.5-turbo*, which we included specifically as a deliberate floor. Llama 3.3-70b scored 48. The Llama-4 training regressed on this specific class of structured medical reasoning. Open weights haven't caught up to closed frontier on clinical guideline tasks.
+> 2. Claude Opus 4.7 scores 4–16 composite points lower than Claude Sonnet 4.6 — within Anthropic's own lineup, depending on split. Smaller, more instruction-tuned siblings beat the reasoning-heavy flagships on structured guideline application.
 >
-> 3. The "pro" tier of frontier models is a poor price/performance trade on structured-output tasks. gpt-5.5-pro costs 30× gpt-5.5 for +2 composite points.
+> 3. Llama 4 Maverick scores 37.87 composite on test. Llama 3.3-70b scored 48.10. The Llama-4 training regressed by 10 composite points on this specific class of structured medical reasoning. Open weights haven't caught up to closed frontier on clinical guideline tasks.
+>
+> 4. The "pro" tier of frontier models is a poor price/performance trade on structured-output tasks. gpt-5.5-pro costs 13× gpt-5.5 for +2 composite points.
 >
 > The benchmark also functions as a stress test of the new generation of reasoning models. Each one has its own hidden-thinking-token budget that has to be reasoned about explicitly: DeepSeek V4 Pro burns ~2500 reasoning tokens per case, gpt-5.5-pro burns ~50000. The submitter docs (`docs/SUBMISSION.md`) include a per-model token budget table because every external submitter will hit this.
 >
@@ -152,29 +155,33 @@ https://huggingface.co/spaces/hiKareeem/radgym [or wherever it lands]
 
 ## 3. r/LocalLLaMA post
 
-Title: **Open benchmark: agentic radiology reasoning. Llama 4 Maverick scores 26/100 — worse than gpt-3.5-turbo. Llama 3.3 scored 48.**
+Title: **Open benchmark: agentic radiology reasoning. Llama 4 Maverick regressed 10 points vs Llama 3.3-70b. DeepSeek V4 Pro (free on OpenRouter) beats Claude Opus 4.7.**
 
 Body:
 
 > Built an open benchmark for LLM agents applying Fleischner Society 2017 guidelines to pulmonary nodule cases. Structured input, structured output, 200 maintainer-curated cases (I'm an ex-radiologist), asymmetric scoring that penalizes under-following more than over-following.
 >
-> The leaderboard had a surprise for the open-weight tier:
+> The open-weight tier had two surprises:
 >
-> **Test-split composite scores:**
+> **Test-split composite scores (150 cases, 12 baselines):**
 > - oracle_rules_engine: 100.00 (the floor — 20 lines of Python applying Fleischner literally)
-> - gpt-5.5: ~88 (estimated; pending final test run)
-> - gemini-3.1-pro: ~83 (estimated)
+> - gpt-5.5: 86.67
+> - gemini-3.1-pro-preview: 83.33
 > - gemini-2.5-pro: 73.47
+> - **deepseek-v4-pro: 67.87 (free on OpenRouter)** ← best non-Western open frontier
 > - claude-sonnet-4-6: 67.00
+> - claude-opus-4-7: 62.87
 > - gpt-4o: 58.57
 > - claude-sonnet-4: 53.73
-> - **llama-3.3-70b: 48.10** ← still our strongest open-weight result
-> - **llama-4-maverick: 26.40** (dev split; not yet run on test) ← regression
+> - **llama-3.3-70b: 48.10 (free)** ← still our strongest Llama-family result
+> - **llama-4-maverick: 37.87 (free)** ← 10-point regression vs 3.3
 > - gpt-3.5-turbo: -0.83 (not rankable, 24.7% malformed)
 >
-> Llama 4 Maverick is the headline. On dev (50 cases) it scored 26.40 composite, with 34% under-following rate (the clinically dangerous failure mode). For comparison: Llama 3.3-70b's 48.10 composite + 22% under-following on test. The Llama-4 training regressed on this specific class of structured medical reasoning.
+> Two headlines for this audience:
 >
-> DeepSeek V4 Pro scored 61.50 on dev — best non-Western open frontier. Still a 22-point gap to gpt-5.5.
+> 1. **DeepSeek V4 Pro at $0/case beats Claude Opus 4.7 ($0.0080/case) by 5 composite points** and beats Claude Sonnet 4.6 by a hair. This is the open-weight story I didn't expect — closed-frontier price/performance is genuinely competitive against free OpenRouter access for structured medical reasoning tasks.
+>
+> 2. **Llama 4 Maverick (37.87) regressed 10 points vs Llama 3.3-70b (48.10)** on the same benchmark. Both run at temperature=0 with identical prompts. Llama-4's 26% under-following rate (the clinically dangerous error class) is higher than Llama 3.3's 22%. Something in the Llama-4 training regressed on structured medical reasoning.
 >
 > Reasoning-model gotchas I documented for submitters (full table in `docs/SUBMISSION.md`):
 > - DeepSeek V4 Pro: ~2500 hidden reasoning tokens/case even with `reasoning_effort=low`. Default 2048 max_tokens truncates 16% of responses.
@@ -184,7 +191,7 @@ Body:
 >
 > All baselines use LiteLLM + OpenRouter for open-weight models. Repo includes a baseline runner you can point at any LiteLLM-compatible model.
 >
-> Submissions open. The dev split (50 cases, full per-case ground truth in the repo) is the right way to debug your prompt before submitting to the hidden test split.
+> Submissions open. The dev split (50 cases, full per-case ground truth in the repo) is the right way to debug your prompt before submitting to the hidden test split. If anyone has a Qwen, Magistral, or fine-tuned medical model they want benchmarked, that's exactly the v0.1 use case.
 >
 > [HF Space URL]
 > github.com/hiKareeem/radgym
@@ -202,14 +209,17 @@ Body:
 1. Push final HF Space URL into all three drafts.
 2. Post HN Show HN at 8-9am ET (highest Show HN visibility).
 3. Post X thread at 9-10am ET (cross-promote — first reply to tweet 1 links the HN post).
-4. Post r/LocalLLaMA at 10-11am ET (after HN traction visible; cross-promote in body).
 
 **Day 2-7:**
-- Respond to methodology questions in all three forums.
+- Respond to methodology questions in both forums.
 - Don't post follow-up content; let the original threads breathe.
+- Continue grinding r/LocalLLaMA karma quietly via genuine participation on adjacent threads. ~50-100 karma typically clears the spam filter.
 
 **Day 8-14:**
+- Once you have submitter karma, post the r/LocalLLaMA thread. Now reframable as "two weeks in: X submissions, here's the leaderboard" if there's traction; or as the original DeepSeek+Llama-regression scoop if not.
 - One follow-up X tweet with: "X submissions so far, top-3 leaderboard movers" — only if there are actually submissions to talk about. Don't fake activity.
+
+**Why r/LocalLLaMA isn't day-1:** fresh accounts auto-filter to mod-queue on r/LocalLLaMA. The Llama-4-regression + DeepSeek-beats-Opus story is durable; it'll still be true on day 8. Splitting launch into two moments (HN+X day 1, r/LocalLLaMA week 2) is better than one big-bang post that gets stuck pending mod approval.
 
 ---
 
