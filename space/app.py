@@ -221,6 +221,7 @@ def render_split_tab(split: str) -> tuple:
 def build_app() -> gr.Blocks:
     with gr.Blocks(
         title="RadGym v0.1 leaderboard",
+        theme=gr.themes.Soft(),
     ) as demo:
         gr.Markdown(INTRO_MD)
 
@@ -245,4 +246,5 @@ def build_app() -> gr.Blocks:
 
 if __name__ == "__main__":
     demo = build_app()
-    demo.launch(theme=gr.themes.Soft())
+    # server_name=0.0.0.0 required on HF Spaces (localhost isn't reachable).
+    demo.launch(server_name="0.0.0.0", server_port=7860)

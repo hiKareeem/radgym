@@ -1,3 +1,17 @@
+---
+title: RadGym v0.1 Leaderboard
+emoji: 🩻
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+sdk_version: "5.13.0"
+python_version: "3.12"
+app_file: app.py
+pinned: false
+license: apache-2.0
+short_description: "Agentic radiology workflow benchmark — Fleischner 2017."
+---
+
 # RadGym v0.1 leaderboard
 
 This directory is the HuggingFace Spaces app for the RadGym leaderboard.
