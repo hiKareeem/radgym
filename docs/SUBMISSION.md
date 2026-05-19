@@ -21,6 +21,15 @@ We run your agent against the **hidden 150-case test split**, score with the asy
 
 You debug your prompt against the public **50-case dev split** (`cases/v0.1/dev/` in the repo) where ground-truth labels are visible.
 
+## How to actually submit (v0.1)
+
+1. File a [new submission issue](https://github.com/hiKareeem/radgym/issues/new?template=submission.yml) on the repo. The form walks you through every required field.
+2. Maintainer reviews within 24-72h: validates schema, cost cap, prompt size.
+3. If valid, the baseline runs against the hidden test split.
+4. Aggregate results are posted as a comment on the issue; the leaderboard updates.
+
+v0.1 is hand-curated and intentionally low-volume. v0.2 will introduce an automated submission pipeline via the HF Space form.
+
 ---
 
 ## 1. What a submission looks like

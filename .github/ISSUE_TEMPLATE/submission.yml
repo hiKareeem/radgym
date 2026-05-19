@@ -1,0 +1,157 @@
+name: RadGym v0.1 — Leaderboard submission
+description: Submit a model + prompt configuration to be scored against the v0.1 hidden test split.
+title: "[Submission] <baseline name>"
+labels: ["submission", "v0.1"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Submit an agent to the RadGym v0.1 leaderboard
+
+        Read [`docs/SUBMISSION.md`](https://github.com/hiKareeem/radgym/blob/main/docs/SUBMISSION.md) first — it covers the schema, the dev-vs-test feedback policy, provider quirks (temperature/top_p/reasoning-budget), and anti-abuse limits.
+
+        After you submit this issue:
+
+        1. The maintainer reviews submission JSON for validity (~24-72h).
+        2. If valid + within cost cap, your baseline runs on the hidden test split.
+        3. Results are posted as a comment on this issue and the leaderboard updates.
+
+        v0.1 is hand-curated — please be patient. v0.2 will automate the pipeline.
+
+  - type: input
+    id: submission_name
+    attributes:
+      label: Submission name
+      description: Human-readable, used on the leaderboard. e.g. `claude-sonnet-4-6-cot-v1`
+      placeholder: e.g. gpt-4o-fewshot
+    validations:
+      required: true
+
+  - type: input
+    id: submitter
+    attributes:
+      label: Submitter (GitHub handle, email, or org)
+      description: Public attribution on the leaderboard.
+      placeholder: e.g. @hiKareeem
+    validations:
+      required: true
+
+  - type: input
+    id: model_identifier
+    attributes:
+      label: Model identifier (LiteLLM format)
+      description: e.g. `openai/gpt-4o-2024-11-20`, `anthropic/claude-sonnet-4-6`, `openrouter/meta-llama/llama-4-maverick`. See SUBMISSION.md §3 for accepted formats.
+      placeholder: e.g. openai/gpt-4o-2024-11-20
+    validations:
+      required: true
+
+  - type: dropdown
+    id: model_provider
+    attributes:
+      label: Model provider
+      options:
+        - openai
+        - anthropic
+        - google
+        - openrouter
+        - huggingface
+        - custom
+    validations:
+      required: true
+
+  - type: textarea
+    id: system_prompt
+    attributes:
+      label: System prompt
+      description: Counts toward submission uniqueness. ≤16k characters.
+      placeholder: "You are a radiology decision-support assistant..."
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_prompt_template
+    attributes:
+      label: User prompt template
+      description: Must contain `{case_json}` placeholder. ≤4k characters.
+      placeholder: |
+        Case:
+        {case_json}
+      render: markdown
+    validations:
+      required: true
+
+  - type: input
+    id: temperature
+    attributes:
+      label: Decoding temperature
+      description: Floats 0.0-2.0. Some providers force temperature=1 — see SUBMISSION.md §5.2.
+      placeholder: e.g. 0.0
+      value: "0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: max_tokens
+    attributes:
+      label: max_tokens
+      description: Reasoning models need ≥4096; non-reasoning ~2048 suffices. See SUBMISSION.md §5.1.
+      placeholder: e.g. 2048
+      value: "2048"
+    validations:
+      required: true
+
+  - type: input
+    id: top_p
+    attributes:
+      label: top_p (optional)
+      description: Omit (or leave blank) unless using non-default nucleus sampling. Some providers reject it.
+      placeholder: leave blank for default
+
+  - type: textarea
+    id: extra_params
+    attributes:
+      label: Extra provider params (optional)
+      description: JSON dict of provider-specific knobs like reasoning_effort. See SUBMISSION.md §5.1 for the per-model token budget table.
+      placeholder: '{"reasoning_effort": "low"}'
+      render: json
+
+  - type: dropdown
+    id: api_key
+    attributes:
+      label: API key arrangement
+      description: Closed-source models require keys. See SUBMISSION.md §6.
+      options:
+        - "I will provide my API key (DM the maintainer after this issue is filed)"
+        - "Use the maintainer's free per-user quota (subject to cost cap)"
+        - "Not applicable (open-weight via OpenRouter / free tier)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: show_cost
+    attributes:
+      label: Show cost on leaderboard?
+      description: Default is hidden. Seeded baselines show cost for transparency. External submitters opt-in.
+      options:
+        - "No (default — hide cost column for this submission)"
+        - "Yes (show $/case and total cost publicly)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional, public)
+      description: Anything you want visible on the leaderboard — what you tried, what worked, methodology caveats.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have read [docs/SUBMISSION.md](https://github.com/hiKareeem/radgym/blob/main/docs/SUBMISSION.md) and agree to the anti-abuse rules (§6).
+          required: true
+        - label: I understand RadGym is research-use-only and not a medical device.
+          required: true
+        - label: I have tested my submission against the public dev split first (recommended, not required).
