@@ -4,7 +4,7 @@
   "n_baselines_snapshot": 2,
   "n_baselines_current_frontier": 7,
   "current_frontier_registry_tag": "frontier-as-of-2026-05-18",
-  "generated_at": "2026-05-18T21:42:34.786285+00:00",
+  "generated_at": "2026-05-19T12:17:49.467752+00:00",
   "snapshot_baselines": [
     {
       "name": "oracle_rules_engine",
