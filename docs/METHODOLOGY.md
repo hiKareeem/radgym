@@ -112,7 +112,7 @@ Every case has a `source` field in its JSON metadata. Public-source cases refere
 
 ### 2.2 Curation procedure
 
-The maintainer (radiology background, 3 years clinical experience) personally constructs or reviews every case. For each case:
+The maintainer (Kareem Albaba, MD — 3-year radiology residency, chest as confident subspecialty) personally constructs or reviews every case. For each case:
 
 1. **Construct or extract** the clinical narrative.
 2. **Encode** the structured fields per §1.2.
@@ -461,3 +461,7 @@ These are flagged in CONCEPT.md §8 and need maintainer redline before code:
 - **No clinical validation**: The benchmark measures algorithm application, not real-world clinical utility. A different (and longer, harder, more expensive) study would be needed for that.
 
 These caveats are stated up front because the rad-AI research audience will look for them; better to own them than be caught.
+
+---
+
+**Maintainer:** Kareem Albaba, MD ([@hiKareeem](https://github.com/hiKareeem)) — 3-year radiology residency, now in AI infrastructure. RadGym is research-use-only; not a medical device.

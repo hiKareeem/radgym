@@ -60,4 +60,4 @@ RadGym is being built in public from commit #1. Design discussions in `docs/`, w
 
 ## Maintainer
 
-[@hiKareeem](https://github.com/hiKareeem) — radiology background (3 years), agentic-AI infra (Hermes, SpireBench).
+**Kareem Albaba, MD** ([@hiKareeem](https://github.com/hiKareeem)) — 3-year radiology residency, now in AI infrastructure (Hermes, SpireBench).
