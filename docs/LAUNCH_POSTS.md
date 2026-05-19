@@ -16,7 +16,7 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 >
 > 150 hidden test cases. 12 baselines seeded. The headline: every frontier model misses ≥13 composite points vs a 20-line rules engine. Best frontier model is gpt-5.5 at 86.67/100.
 >
-> 🔗 leaderboard: [HF Space URL]
+> 🔗 leaderboard: https://huggingface.co/spaces/hiKareem/radgym
 > 🔗 repo: github.com/hiKareeem/radgym
 
 > **(2/12)** Why this exists:
@@ -97,7 +97,7 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 >
 > Why I built this: 3 years radiology residency before I left for AI. Eval-design heritage from SpireBench. Submissions welcome. Tear it apart.
 >
-> 🔗 leaderboard: [HF Space URL]
+> 🔗 leaderboard: https://huggingface.co/spaces/hiKareem/radgym
 > 🔗 repo: github.com/hiKareeem/radgym
 > 🔗 submitter docs: github.com/hiKareeem/radgym/blob/main/docs/SUBMISSION.md
 
@@ -113,7 +113,7 @@ For posting from [@hiKareeem] or wherever the project lives socially. Designed t
 
 ```
 Show HN: RadGym – an agentic benchmark for radiology workflow reasoning
-https://huggingface.co/spaces/hiKareeem/radgym [or wherever it lands]
+https://huggingface.co/spaces/hiKareem/radgym
 ```
 
 **Body** (HN doesn't allow markdown but this preserves the structure):
@@ -137,7 +137,7 @@ https://huggingface.co/spaces/hiKareeem/radgym [or wherever it lands]
 > I'm a radiologist by training (3 years residency) who left for AI infrastructure work. I wanted to scratch the gap between "ML researchers who don't know what radiologists do" and "physicians who can't ship infra." This is the smallest tractable version of that gap.
 >
 > Code: github.com/hiKareeem/radgym
-> Leaderboard: [HF Space URL]
+> Leaderboard: https://huggingface.co/spaces/hiKareem/radgym
 > Submitter docs: github.com/hiKareeem/radgym/blob/main/docs/SUBMISSION.md
 > Methodology: github.com/hiKareeem/radgym/blob/main/docs/METHODOLOGY.md
 >
@@ -193,7 +193,7 @@ Body:
 >
 > Submissions open. The dev split (50 cases, full per-case ground truth in the repo) is the right way to debug your prompt before submitting to the hidden test split. If anyone has a Qwen, Magistral, or fine-tuned medical model they want benchmarked, that's exactly the v0.1 use case.
 >
-> [HF Space URL]
+> https://huggingface.co/spaces/hiKareem/radgym
 > github.com/hiKareeem/radgym
 
 **Notes for posting:**
