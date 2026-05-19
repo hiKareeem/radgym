@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: pytest + contamination check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,baselines]"
+
+      - name: Run pytest
+        run: pytest -q
+
+      - name: Verify case JSONs parse as Pydantic models
+        run: |
+          python -c "
+          from pathlib import Path
+          from radgym.schemas import CaseRecord
+          for d in [Path('cases/v0.1/dev')]:
+              n = 0
+              for p in d.glob('RGYM-v01-*.json'):
+                  CaseRecord.model_validate_json(p.read_text())
+                  n += 1
+              print(f'{d}: {n} cases parsed OK')
+          "
+
+      - name: Run oracle baseline on dev split (should score 100/100)
+        run: |
+          python scripts/run_baseline.py --baseline oracle --quiet \
+            --cases-dir cases/v0.1/dev --results-dir /tmp/ci-oracle | tail -10
+          python -c "
+          import json
+          s = json.load(open('/tmp/ci-oracle/_summary.json'))
+          oracle = next((b for b in s if 'oracle' in b['baseline_name']), None)
+          assert oracle is not None, 'oracle baseline not found in summary'
+          assert oracle['composite'] == 100.0, f'oracle composite is {oracle[\"composite\"]}, expected 100.0 — methodology bug'
+          print(f'Oracle composite: {oracle[\"composite\"]} ✓')
+          "
+
+      - name: Check case contamination against Fleischner 2017 paper
+        run: |
+          python scripts/check_contamination.py --cases-dir cases/v0.1/dev
