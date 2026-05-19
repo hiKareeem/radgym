@@ -43,3 +43,9 @@ results/
 .DS_Store
 Thumbs.db
 
+# Inter-rater κ answer key — never publish; the reviewer must label blind.
+kappa_review/**/maintainer_key.csv
+# Reviewer reply CSVs — kept local until methodology section drafted.
+kappa_review/**/reviewer_filled*.csv
+kappa_review/**/*.zip
+
